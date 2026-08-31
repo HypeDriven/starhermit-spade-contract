@@ -1,0 +1,16 @@
+{
+  "name": "spade-contract",
+  "version": "1.0.0",
+  "description": "Spade Contract - a trick-taking card game (browser, no dependencies)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "MIT",
+  "private": true,
+  "keywords": [],
+  "author": "",
+  "dependencies": {
+    "three": "^0.170.0"
+  }
+}

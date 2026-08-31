@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Spade Contract</title>
+<link rel="stylesheet" href="./style.css" />
+<script src="./rules.js"></script>
+<script src="./ui.js"></script>
+<script src="./sfx.js"></script>
+</head>
+<body>
+<div id="app">
+
+  <header class="topbar">
+    <h1 class="game-title">Spade Contract</h1>
+    <div class="round-info" aria-live="polite"><span id="round-label">Round 0 / 5</span></div>
+    <nav class="top-actions" aria-label="Menu actions">
+      <button type="button" data-action="help" class="btn btn-secondary">Help</button>
+      <button type="button" data-action="settings" class="btn btn-secondary">Settings</button>
+      <button type="button" data-action="new-game" id="btn-new-game" class="btn btn-primary hidden">New Game</button>
+    </nav>
+  </header>
+
+  <main class="content">
+    <section class="score-panel" aria-label="Score summary">
+      <div class="score-row"><span class="label">Team A (South / West)</span><span id="score-a" class="value">0</span></div>
+      <div class="score-row"><span class="label">Team B (North / East)</span><span id="score-b" class="value">0</span></div>
+    </section>
+
+    <section class="table-panel" aria-label="Card table">
+      <div class="hand hand-top" data-seat="north"></div>
+      <div class="hand hand-left" data-seat="west"></div>
+      <div id="trick-area" class="trick-area" aria-live="polite"></div>
+      <div class="hand hand-right" data-seat="east"></div>
+      <div class="hand hand-bottom" data-seat="south"></div>
+    </section>
+
+    <aside class="side-panel">
+      <h2 id="phase-title" class="panel-title">Bid</h2>
+      <p id="bid-status" class="status-text" aria-live="polite"></p>
+      <ul id="trick-list" class="trick-list" aria-label="Tricks taken this round"></ul>
+
+      <section id="results-panel" class="panel hidden">
+        <h2 class="panel-title">Results</h2>
+        <div id="final-score" class="status-text" aria-live="polite"></div>
+        <p id="winner-line" class="status-text" aria-live="polite"></p>
+      </section>
+
+      <button type="button" data-action="bid-0" class="btn btn-secondary bid-btn hidden">Pass (0)</button>
+      <button type="button" data-action="bid-1" class="btn btn-primary bid-btn hidden">Bid 1</button>
+      <button type="button" data-action="bid-2" class="btn btn-primary bid-btn hidden">Bid 2</button>
+      <button type="button" data-action="bid-3" class="btn btn-primary bid-btn hidden">Bid 3</button>
+
+      <div id="card-area" class="cards"></div>
+    </aside>
+  </main>
+
+</div>
+
+<script src="./boot.js"></script>
+<script>Sfx.bind();</script>
+</body>
+</html>

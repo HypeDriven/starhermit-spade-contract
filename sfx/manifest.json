@@ -1,0 +1,98 @@
+[
+  {
+    "name": "card-select",
+    "seconds": 1,
+    "prompt": "A single playing card softly lifted and slid across a felt card table, brief paper whisper",
+    "event": "cardSelect"
+  },
+  {
+    "name": "card-play",
+    "seconds": 1,
+    "prompt": "A playing card placed firmly face-up onto a wooden card table, crisp snap with a soft felt thud",
+    "event": "cardPlay"
+  },
+  {
+    "name": "card-deal",
+    "seconds": 1,
+    "prompt": "Playing cards dealt rapidly one by one across a felt table, quick rhythmic paper flicks",
+    "event": "cardDeal"
+  },
+  {
+    "name": "bid-place",
+    "seconds": 1,
+    "prompt": "A small wooden bidding token tapped decisively twice on a polished table, dry knock",
+    "event": "bidPlace"
+  },
+  {
+    "name": "bid-pass",
+    "seconds": 1,
+    "prompt": "A single soft dismissive finger tap on a padded card table, muted low thump",
+    "event": "bidPass"
+  },
+  {
+    "name": "spade-trump",
+    "seconds": 2,
+    "prompt": "A heavy playing card slapped down with a deep resonant thud and a short dramatic metallic ring",
+    "event": "spadeTrump"
+  },
+  {
+    "name": "trick-win",
+    "seconds": 2,
+    "prompt": "A small stack of playing cards gathered and scooped toward the winner, warm paper shuffle ending in a satisfying soft chime",
+    "event": "trickWin"
+  },
+  {
+    "name": "trick-lose",
+    "seconds": 1,
+    "prompt": "Playing cards gently pulled away across felt, a quiet descending paper shuffle",
+    "event": "trickLose"
+  },
+  {
+    "name": "invalid-move",
+    "seconds": 1,
+    "prompt": "A short muted double knock on wood, dull and disapproving, no resonance",
+    "event": "invalidMove"
+  },
+  {
+    "name": "round-start",
+    "seconds": 2,
+    "prompt": "A full deck of playing cards shuffled once and squared with a clean riffle and a single tap",
+    "event": "roundStart"
+  },
+  {
+    "name": "round-end",
+    "seconds": 2,
+    "prompt": "Score tokens counted and stacked on a wooden table, soft clicks ending in a gentle settle",
+    "event": "roundEnd"
+  },
+  {
+    "name": "game-win",
+    "seconds": 3,
+    "prompt": "A warm celebratory brass bell chime with a soft cascade of cards fanned across felt",
+    "event": "gameWin"
+  },
+  {
+    "name": "game-lose",
+    "seconds": 2,
+    "prompt": "A low muffled gong with cards softly set down, subdued and final",
+    "event": "gameLose"
+  },
+  {
+    "name": "ui-click",
+    "seconds": 1,
+    "prompt": "A short clean wooden button click, tight attack with minimal decay",
+    "event": "uiClick"
+  },
+  {
+    "name": "ui-open",
+    "seconds": 1,
+    "prompt": "A soft panel sliding open, gentle felt and wood friction sweep",
+    "event": "uiOpen"
+  },
+  {
+    "name": "new-game",
+    "seconds": 2,
+    "prompt": "A deck of playing cards squared with a crisp double tap followed by a bright inviting shuffle",
+    "event": "newGame"
+  }
+]
