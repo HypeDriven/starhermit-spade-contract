@@ -10,17 +10,28 @@ const ROOT = __dirname;
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'application/javascript; charset=utf-8',
+  '.mjs': 'application/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.ico': 'image/x-icon',
+  '.txt': 'text/plain; charset=utf-8',
+  '.md': 'text/markdown; charset=utf-8',
   '.opus': 'audio/ogg',
 };
 
 function send(res, code, body) {
-  res.writeHead(code);
+  res.writeHead(code, { 'Content-Type': typeof body === 'string'
+    ? 'text/plain; charset=utf-8'
+    : MIME['.html'] });
   res.end(body);
 }
 
 const server = http.createServer((req, res) => {
-  const urlPath = (req.url || '/').split('?')[0];
+  let urlPath;
+  try { urlPath = decodeURIComponent((req.url || '/').split('?')[0]); } catch { send(res, 400, 'Bad path'); return; }
+  if (urlPath.split(/[\\/]/).some(p => p.startsWith('.') || ['data', 'node_modules'].includes(p))) { send(res, 403, 'Forbidden'); return; }
   if (urlPath === '/' ) {
     try {
       send(res, 200, fs.readFileSync(path.join(ROOT, 'index.html')));

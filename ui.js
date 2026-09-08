@@ -18,7 +18,30 @@ const els = {};
 let match = null;
 let busy = false;
 
+/* Scheduled AI / pacing steps belong to one match generation. Starting a new
+ * match bumps the generation and cancels the pending step so a timer queued
+ * for the previous match can never act on the new one. */
+let generation = 0;
+let pendingTimer = null;
+
 function $(id) { return document.getElementById(id); }
+
+function clearPending() {
+  if (pendingTimer !== null) {
+    clearTimeout(pendingTimer);
+    pendingTimer = null;
+  }
+}
+
+function later(fn, ms) {
+  const gen = generation;
+  clearPending();
+  pendingTimer = setTimeout(() => {
+    pendingTimer = null;
+    if (gen !== generation) return;
+    fn();
+  }, ms);
+}
 
 function sfx(name) {
   if (window.Sfx && typeof window.Sfx.play === 'function') window.Sfx.play(name);
@@ -99,7 +122,16 @@ function renderPlayerHand() {
     btn.textContent = cardText(card);
     btn.setAttribute('aria-label', cardAria(card));
     const playable = legal.indexOf(idx) !== -1;
-    if (rs.phase === 'play') btn.classList.add(playable ? 'playable' : 'blocked');
+    if (rs.phase === 'play') {
+      btn.classList.add(playable ? 'playable' : 'blocked');
+      // Blocked cards stay clickable on purpose: tapping one explains the
+      // follow-suit rule, so they are described rather than marked disabled.
+      if (!playable) {
+        if (rs.currentSeat === HUMAN && rs.leadSuit) {
+          btn.setAttribute('aria-label', cardAria(card) + ', not playable, must follow ' + SUIT_NAME[rs.leadSuit]);
+        }
+      }
+    }
     btn.addEventListener('click', () => onCardClick(idx));
     area.appendChild(btn);
   });
@@ -177,6 +209,9 @@ function render() {
 /* --- flow --- */
 
 function newMatch() {
+  generation++;
+  clearPending();
+  busy = false;
   match = window.Rules.createMatch();
   window.Rules.dealRound(match);
   sfx('roundStart');
@@ -190,7 +225,7 @@ function advanceAI() {
 
   if (rs.phase === 'bid' && rs.currentBidder !== HUMAN) {
     busy = true;
-    setTimeout(() => {
+    later(() => {
       const seat = rs.currentBidder;
       const bid = window.Rules.aiBid(rs.hands[seat]);
       window.Rules.placeBid(match, seat, bid);
@@ -205,9 +240,10 @@ function advanceAI() {
   if (rs.phase === 'play') {
     if (rs.trick.length === 4) {
       busy = true;
-      setTimeout(() => {
+      renderStatus(SEAT_LABEL[rs.lastTrickWinner] + ' wins the trick.');
+      later(() => {
         const result = window.Rules.collectTrick(match);
-        sfx(Rules.teamOf(rs.lastTrickWinner) === 0 ? 'trickWin' : 'trickLose');
+        sfx(window.Rules.teamOf(rs.lastTrickWinner) === 0 ? 'trickWin' : 'trickLose');
         busy = false;
         if (result) {
           onRoundScored(result);
@@ -220,7 +256,7 @@ function advanceAI() {
     }
     if (rs.currentSeat !== HUMAN) {
       busy = true;
-      setTimeout(() => {
+      later(() => {
         const seat = rs.currentSeat;
         const idx = window.Rules.aiChoose(match, seat);
         window.Rules.playCard(match, seat, idx);
@@ -251,7 +287,7 @@ function onRoundScored(result) {
   render();
   if (!result.gameOver) {
     busy = true;
-    setTimeout(() => {
+    later(() => {
       busy = false;
       window.Rules.dealRound(match);
       sfx('roundStart');

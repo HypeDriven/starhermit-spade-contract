@@ -16,6 +16,29 @@ window.Sfx = (() => {
   let muted = false;
   let volume = 0.8;
 
+  /* Audio preferences persist locally (no credentials or tokens are stored). */
+  const STORE_KEY = 'spade-contract.audio.v1';
+
+  function loadPrefs() {
+    try {
+      const raw = window.localStorage.getItem(STORE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (typeof saved.muted === 'boolean') muted = saved.muted;
+      if (typeof saved.volume === 'number' && isFinite(saved.volume)) {
+        volume = Math.max(0, Math.min(1, saved.volume));
+      }
+    } catch (_e) { /* storage unavailable or corrupt: keep defaults */ }
+  }
+
+  function savePrefs() {
+    try {
+      window.localStorage.setItem(STORE_KEY, JSON.stringify({ muted: muted, volume: volume }));
+    } catch (_e) { /* storage unavailable: preferences stay session-only */ }
+  }
+
+  loadPrefs();
+
   // sample name -> AudioBuffer | 'loading' | 'error'
   const samples = new Map();
 
@@ -208,11 +231,17 @@ window.Sfx = (() => {
   function setMuted(value) {
     muted = !!value;
     if (master) master.gain.value = muted ? 0 : volume;
+    savePrefs();
   }
 
   function setVolume(value) {
     volume = Math.max(0, Math.min(1, Number(value) || 0));
     if (master && !muted) master.gain.value = volume;
+    savePrefs();
+  }
+
+  function getSettings() {
+    return { muted: muted, volume: volume };
   }
 
   /* Bind SFX to the existing UI handlers declared in index.html. */
@@ -241,7 +270,7 @@ window.Sfx = (() => {
     }
   }
 
-  const api = { play, unlock, bind, setMuted, setVolume, events: Object.keys(EVENTS) };
+  const api = { play, unlock, bind, setMuted, setVolume, getSettings, events: Object.keys(EVENTS) };
   Object.keys(EVENTS).forEach((name) => {
     api[name] = () => play(name);
   });

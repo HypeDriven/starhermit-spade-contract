@@ -6,18 +6,25 @@
 (function () {
 
 let openDialog = null;
+let lastFocused = null;
 
 function closeDialog() {
   if (openDialog) {
     openDialog.classList.add('hidden');
     openDialog = null;
+    if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+    lastFocused = null;
   }
 }
 
 function showDialog(dialog) {
+  const opener = document.activeElement;
   closeDialog();
   dialog.classList.remove('hidden');
   openDialog = dialog;
+  lastFocused = opener;
+  const close = dialog.querySelector('.dialog-head button');
+  if (close) close.focus();
 }
 
 function makeDialog(title, bodyNode) {
@@ -64,7 +71,8 @@ function buildHelpDialog() {
     'bids how many tricks it will take, then tries to make that contract.</p>' +
     '<ul>' +
     '<li>Each player bids 0–3 tricks. Your team\'s contract is the sum of its bids.</li>' +
-    '<li>The player to the left leads; you must follow the led suit if you can.</li>' +
+    '<li>South leads the first trick; afterwards the winner of a trick leads the next one.</li>' +
+    '<li>You must follow the led suit if you can.</li>' +
     '<li>Spades are always trump and beat every other suit.</li>' +
     '<li>Highest trump — or highest card of the led suit — wins the trick; the winner leads next.</li>' +
     '<li>Make your contract: +10 per trick bid, +1 per extra trick. Miss it: −10 per trick bid.</li>' +
@@ -95,6 +103,13 @@ function buildSettingsDialog() {
   vol.max = '100';
   vol.value = '80';
   vol.setAttribute('aria-label', 'Effects volume');
+
+  // reflect the stored audio preferences so the controls match what is heard
+  if (window.Sfx && typeof window.Sfx.getSettings === 'function') {
+    const saved = window.Sfx.getSettings();
+    mute.checked = saved.muted;
+    vol.value = String(Math.round(saved.volume * 100));
+  }
   volRow.appendChild(volText);
   volRow.appendChild(vol);
 

@@ -4,13 +4,17 @@
   "description": "Spade Contract - a trick-taking card game (browser, no dependencies)",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test:e2e": "node tests/e2e.mjs"
   },
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE.md",
   "private": true,
   "keywords": [],
   "author": "",
   "dependencies": {
     "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.63.0"
   }
 }
