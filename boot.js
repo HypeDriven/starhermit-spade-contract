@@ -8,6 +8,10 @@
 let openDialog = null;
 let lastFocused = null;
 
+function playUi(event) {
+  if (window.Sfx && typeof window.Sfx.play === 'function') window.Sfx.play(event);
+}
+
 function closeDialog() {
   if (openDialog) {
     openDialog.classList.add('hidden');
@@ -46,7 +50,7 @@ function makeDialog(title, bodyNode) {
   close.type = 'button';
   close.className = 'btn btn-secondary';
   close.textContent = 'Close';
-  close.addEventListener('click', closeDialog);
+  close.addEventListener('click', () => { playUi('uiClick'); closeDialog(); });
   head.appendChild(h);
   head.appendChild(close);
 
@@ -58,7 +62,7 @@ function makeDialog(title, bodyNode) {
   panel.appendChild(body);
   wrap.appendChild(panel);
   wrap.addEventListener('click', (e) => {
-    if (e.target === wrap) closeDialog();
+    if (e.target === wrap) { playUi('uiClick'); closeDialog(); }
   });
   document.body.appendChild(wrap);
   return wrap;
@@ -147,7 +151,7 @@ function boot() {
   if (newGameBtn) newGameBtn.classList.remove('hidden');
 
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeDialog();
+    if (e.key === 'Escape' && openDialog) { playUi('uiClick'); closeDialog(); }
   });
 
   window.Game.init();

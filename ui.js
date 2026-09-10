@@ -47,6 +47,14 @@ function sfx(name) {
   if (window.Sfx && typeof window.Sfx.play === 'function') window.Sfx.play(name);
 }
 
+/* A spade cutting a non-spade lead gets the trump accent; every other play is
+ * a plain card sound. rs.leadSuit already holds the trick's led suit here. */
+function playCardSfx(card) {
+  const rs = match && match.roundState;
+  if (card.suit === 'S' && rs && rs.leadSuit && rs.leadSuit !== 'S') sfx('spadeTrump');
+  else sfx('cardPlay');
+}
+
 function cardText(card) {
   return card.rank + SUIT_GLYPH[card.suit];
 }
@@ -214,7 +222,7 @@ function newMatch() {
   busy = false;
   match = window.Rules.createMatch();
   window.Rules.dealRound(match);
-  sfx('roundStart');
+  sfx('cardDeal');
   render();
   advanceAI();
 }
@@ -259,8 +267,8 @@ function advanceAI() {
       later(() => {
         const seat = rs.currentSeat;
         const idx = window.Rules.aiChoose(match, seat);
-        window.Rules.playCard(match, seat, idx);
-        sfx('cardPlay');
+        const played = window.Rules.playCard(match, seat, idx);
+        playCardSfx(played.card);
         busy = false;
         render();
         advanceAI();
@@ -313,8 +321,8 @@ function onCardClick(idx) {
     sfx('invalidMove');
     return;
   }
-  window.Rules.playCard(match, HUMAN, idx);
-  sfx('cardPlay');
+  const played = window.Rules.playCard(match, HUMAN, idx);
+  playCardSfx(played.card);
   render();
   advanceAI();
 }
