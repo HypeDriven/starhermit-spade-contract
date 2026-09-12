@@ -7,6 +7,7 @@
 <title>Spade Contract</title>
 <link rel="stylesheet" href="./style.css" />
 <script src="./rules.js"></script>
+<script src="./platform.js"></script>
 <script src="./ui.js"></script>
 <script src="./sfx.js"></script>
 </head>
@@ -16,6 +17,10 @@
   <header class="topbar">
     <h1 class="game-title">Spade Contract</h1>
     <div class="round-info" aria-live="polite"><span id="round-label">Round 0 / 5</span></div>
+    <div id="player-chip" class="player-chip hidden">
+      <span id="player-name" class="player-name"></span>
+      <span id="sync-status" class="sync-status" data-sync="offline" role="status"></span>
+    </div>
     <nav class="top-actions" aria-label="Menu actions">
       <button type="button" data-action="help" class="btn btn-secondary">Help</button>
       <button type="button" data-action="settings" class="btn btn-secondary">Settings</button>

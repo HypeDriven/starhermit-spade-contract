@@ -21,9 +21,10 @@
  * through window.Game.onBid / window.Game.onCardClick). It never performs
  * a move through a JS API. No game code is modified.
  *
- * Serving: the repo ships `server.js` (the StarHermit launch script) but
- * the client is a fully self-contained static SPA — rules.js/ui.js/boot.js
- * and the sfx/*.opus samples load with no /api calls. So, per the sibling
+ * Serving: the repo ships `server.js` (static dev server, declared as
+ * `server=server.js` in starhermit.txt) but the client is a fully
+ * self-contained static SPA — rules.js/platform.js/ui.js/boot.js and the
+ * sfx/*.opus samples load with no /api calls. So, per the sibling
  * conventions (picture-logic/blockstead/balance-spire), this test embeds a
  * minimal node:http static server on an ephemeral port and answers /api/*
  * probes with 200 `{}` so the client debounces to its offline path with

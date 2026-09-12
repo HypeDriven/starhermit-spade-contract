@@ -64,6 +64,38 @@ body {
   min-width: 0;
 }
 
+/* --- hosted profile chip (nickname + cloud-save sync status) --- */
+
+.player-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.player-name { color: var(--ink); font-weight: 600; }
+
+.sync-status { color: var(--ink-dim); }
+
+.sync-status::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+  background: var(--ink-dim);
+}
+
+.sync-status[data-sync="synced"]::before { background: #4caf7d; }
+.sync-status[data-sync="saving"]::before { background: var(--accent); }
+.sync-status[data-sync="offline"]::before { background: var(--red); }
+
 .top-actions {
   margin-left: auto;
   display: flex;

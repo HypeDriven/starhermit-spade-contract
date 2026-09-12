@@ -212,6 +212,65 @@ function render() {
   renderBidControls();
   renderTrickList();
   renderPhase();
+  // Every state mutation funnels through render(); mirror the match into
+  // the save doc (localStorage now, cloud debounced by the platform layer).
+  // A null match (welcome screen) must never clobber a saved match on boot.
+  if (window.Platform && match) window.Platform.scheduleSave(match);
+}
+
+/* --- persistence: restore a saved match after a reload --- */
+
+function sanitizeMatch(m) {
+  if (!m || typeof m !== 'object') return null;
+  if (typeof m.seed !== 'number' || !isFinite(m.seed)) return null;
+  if (typeof m.round !== 'number' || !Array.isArray(m.scores) || m.scores.length !== 2) return null;
+  if (typeof m.over !== 'boolean' || typeof m.tick !== 'number') return null;
+  const rs = m.roundState;
+  if (rs === null) return m.round >= 0 && !m.over ? m : null;
+  if (typeof rs !== 'object') return null;
+  const suits = window.Rules.SUITS;
+  const ranks = window.Rules.RANKS;
+  const seatIdx = (v) => typeof v === 'number' && v >= 0 && v <= 3 && (v | 0) === v;
+  const cardOk = (c) => c && suits.indexOf(c.suit) !== -1 && ranks.indexOf(c.rank) !== -1;
+  if (['bid', 'play', 'scored'].indexOf(rs.phase) === -1) return null;
+  if (!seatIdx(rs.currentBidder) || !seatIdx(rs.currentSeat)) return null;
+  if (typeof rs.lastTrickWinner !== 'number' || rs.lastTrickWinner < -1 || rs.lastTrickWinner > 3) return null;
+  if (!Array.isArray(rs.bids) || rs.bids.length !== 4) return null;
+  if (!rs.bids.every((b) => b === null || (b >= 0 && b <= 3))) return null;
+  if (!Array.isArray(rs.tricksWon) || rs.tricksWon.length !== 4) return null;
+  if (!Array.isArray(rs.hands) || rs.hands.length !== 4) return null;
+  if (!rs.hands.every((h) => Array.isArray(h) && h.every(cardOk))) return null;
+  if (rs.leadSuit !== null && suits.indexOf(rs.leadSuit) === -1) return null;
+  if (!Array.isArray(rs.trick) || rs.trick.length > 4) return null;
+  if (!rs.trick.every((t) => t && seatIdx(t.seat) && cardOk(t.card))) return null;
+  return m;
+}
+
+function resumeMatch(saved) {
+  const m = sanitizeMatch(saved);
+  if (!m) return;
+  generation++;
+  clearPending();
+  busy = false;
+  match = m;
+  const rs = match.roundState;
+  if (!match.over && (!rs || rs.phase === 'scored')) {
+    // Saved during the inter-round pause (or before the first deal): settle
+    // straight into the next deal.
+    window.Rules.dealRound(match);
+  }
+  render();
+  advanceAI(); // picks AI bids/plays back up when it is not the human's turn
+}
+
+/* Load the save doc (cloud when hosted, else the local cache) and take the
+ * saved seat back — unless a fresh match already started while loading. */
+function resumeSavedMatch() {
+  if (!window.Platform) return;
+  window.Platform.init().then((doc) => {
+    if (match || !doc || !doc.match) return;
+    resumeMatch(doc.match);
+  }).catch(() => {});
 }
 
 /* --- flow --- */
@@ -333,6 +392,7 @@ function init() {
   ].forEach((id) => { els[id] = $(id); });
   match = null;
   render();
+  resumeSavedMatch();
 }
 
 return {
