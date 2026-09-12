@@ -402,3 +402,33 @@ button.card.blocked { opacity: 0.45; }
   .btn, button.card.hand-card { transition: none; }
   button.card.playable:hover, button.card.playable:focus-visible { transform: none; }
 }
+
+/* --- short landscape (phones sideways): table on the left, status + hand tray
+   on the right, everything inside the viewport so the trick and the playable
+   hand are always visible together --- */
+@media (max-height: 500px) and (orientation: landscape) {
+  :root { --card-w: 40px; --gap: 6px; }
+  #app { height: 100dvh; min-height: 0; }
+  .topbar { padding: calc(4px + env(safe-area-inset-top, 0px)) 10px 4px; gap: 4px 10px; }
+  .topbar .btn { min-height: 36px; padding: 4px 10px; }
+  .content {
+    min-height: 0; overflow: hidden;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas: "table score" "table side";
+  }
+  .score-panel { grid-area: score; order: 0; padding: 4px 10px; gap: 2px 12px; font-size: 0.8rem; flex-wrap: nowrap; }
+  .score-panel .score-row { flex: 1 1 0; min-width: 0; }
+  .game-title { font-size: 1.1rem; }
+  .side-panel .panel-title { font-size: 0.95rem; margin: 0 0 2px; }
+  .table-panel { grid-area: table; min-height: 0; padding: 6px; gap: 4px; }
+  .side-panel { grid-area: side; order: 0; min-height: 0; overflow: auto; display: flex; flex-direction: column; padding: 8px 10px; }
+  .side-panel .status-text { margin: 2px 0 6px; font-size: 0.85rem; }
+  .side-panel > * { flex: 0 0 auto; }
+  .trick-list { flex: 1 1 2em; min-height: 1.5em; overflow: auto; font-size: 0.85rem; margin: 0; }
+  .side-panel .bid-btn { margin: 2px 4px 2px 0; }
+  .cards { margin-top: 6px; gap: 6px; }
+  .score-panel .score-row { font-size: 0.85rem; }
+  .trick-slot { min-height: calc(var(--card-w) * 1.42 + 2px); }
+  .hand { padding: 2px; gap: 0; }
+}
