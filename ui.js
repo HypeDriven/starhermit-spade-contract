@@ -17,6 +17,7 @@ const TRICK_PAUSE = 1100;
 const els = {};
 let match = null;
 let busy = false;
+let lastTrickLen = 0; // trick size at the previous render: only the newest card animates in
 
 /* Scheduled AI / pacing steps belong to one match generation. Starting a new
  * match bumps the generation and cancels the pending step so a timer queued
@@ -103,8 +104,14 @@ function renderTrick() {
     if (played) {
       const c = document.createElement('div');
       c.className = 'card face' + (played.card.suit === 'H' || played.card.suit === 'D' ? ' red' : '');
-      if (rs.lastTrickWinner === seat && rs.trick.length === 4) c.classList.add('winner');
+      c.dataset.corner = cardText(played.card);
+      if (rs.trick.length !== lastTrickLen && rs.trick[rs.trick.length - 1].seat === seat) c.classList.add('fresh');
       c.textContent = cardText(played.card);
+      if (rs.lastTrickWinner === seat && rs.trick.length === 4) {
+        c.classList.add('winner');
+        const done = rs.tricksWon.reduce((a, b) => a + b, 0);
+        if (window.Fx) window.Fx.trickWon(c, match.seed + ':' + match.round + ':' + done, window.Rules.teamOf(seat) === 0);
+      }
       c.setAttribute('aria-label', cardAria(played.card) + ', ' + SEAT_LABEL[seat]);
       slot.appendChild(c);
     } else {
@@ -114,6 +121,7 @@ function renderTrick() {
     }
     area.appendChild(slot);
   });
+  lastTrickLen = rs ? rs.trick.length : 0;
 }
 
 function renderPlayerHand() {
@@ -128,6 +136,7 @@ function renderPlayerHand() {
     btn.type = 'button';
     btn.className = 'card face hand-card' + (card.suit === 'H' || card.suit === 'D' ? ' red' : '');
     btn.textContent = cardText(card);
+    btn.dataset.corner = cardText(card);
     btn.setAttribute('aria-label', cardAria(card));
     const playable = legal.indexOf(idx) !== -1;
     if (rs.phase === 'play') {
@@ -345,6 +354,7 @@ function onRoundScored(result) {
       : (result.winner === 0 ? 'Team A (your team) wins the contract!'
         : 'Team B wins the contract.');
     sfx(result.winner === 0 ? 'gameWin' : 'gameLose');
+    if (window.Fx) window.Fx.matchOver(result.winner === 0);
   } else {
     $('phase-title').textContent = 'Round ' + result.round + ' scored';
     renderStatus('A: bid ' + a.contract + ', took ' + a.taken + ' (' + (a.delta >= 0 ? '+' : '') + a.delta + ') · ' +

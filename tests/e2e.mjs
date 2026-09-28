@@ -223,6 +223,74 @@ async function driveToEnd(page, { maxMs, touch, maxCards } = {}) {
   throw new Error(`match did not finish within ${maxMs}ms (round ${(await readState(page))?.round}, phase ${(await readState(page))?.phase})`);
 }
 
+
+// ---------- Graphics settings through the visible Settings dialog ----------
+// Opens Settings → Graphics, switches preset Low → High, overrides one
+// category, checks body[data-gfx-*] + the summary, reloads to confirm the
+// choice persisted, then picks Ultra (clears overrides) and returns to Auto.
+async function graphicsPass(page, name) {
+  const attr = (k) => page.evaluate((key) => document.body.dataset[key], k);
+  const expectAttr = async (k, v) => {
+    await page.waitForFunction(([key, val]) => document.body.dataset[key] === val, [k, v], { timeout: 5000 })
+      .catch(async () => { throw new Error(`${name}: body.dataset.${k} = ${await attr(k)}, expected ${v}`); });
+  };
+  const openSettings = async () => {
+    await page.click('[data-action="settings"]');
+    await page.waitForSelector('#gfx-section', { state: 'visible', timeout: 5000 });
+  };
+  const closeSettings = async () => {
+    await page.locator('.dialog-backdrop:not(.hidden) .dialog-head button').click();
+    await page.waitForFunction(() => !document.querySelector('.dialog-backdrop:not(.hidden)'));
+  };
+
+  const autoPreset = await attr('gfxPreset');
+  await openSettings();
+  // the panel fits inside the viewport (it scrolls internally when tall)
+  const vp = page.viewportSize();
+  const box = await page.locator('.dialog-backdrop:not(.hidden) .dialog-panel').boundingBox();
+  if (!box || box.x < 0 || box.y < 0 || box.x + box.width > vp.width + 1 || box.y + box.height > vp.height + 1) {
+    throw new Error(`${name}: settings panel does not fit the viewport: ${JSON.stringify(box)}`);
+  }
+  const autoLabel = await page.locator('#gfx-preset option[value="auto"]').textContent();
+  if (!/Auto \(detected: /.test(autoLabel)) throw new Error(`${name}: unexpected Auto label "${autoLabel}"`);
+
+  await page.locator('#gfx-preset').scrollIntoViewIfNeeded();
+  await page.selectOption('#gfx-preset', 'low');
+  await expectAttr('gfxPreset', 'low');
+  await expectAttr('gfxBackground', 'static');
+  await page.selectOption('#gfx-preset', 'high');
+  await expectAttr('gfxPreset', 'high');
+  await expectAttr('gfxBloom', 'on');
+  await expectAttr('gfxDetail', 'detailed');
+  await page.locator('#gfx-cat-bloom').scrollIntoViewIfNeeded();
+  await page.selectOption('#gfx-cat-bloom', 'off');
+  await expectAttr('gfxBloom', 'off');
+  const summary = (await page.textContent('#gfx-summary')).trim();
+  if (!/deep shadows/.test(summary) || /glow/.test(summary) || !/\d+×\d+ px/.test(summary)) {
+    throw new Error(`${name}: unexpected graphics summary "${summary}"`);
+  }
+  await page.screenshot({ path: SHOT('graphics', name) });
+  await closeSettings();
+
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForFunction(() => !!window.Game && !!window.Rules && !!window.Fx);
+  await installProbe(page);
+  await expectAttr('gfxPreset', 'high');
+  await expectAttr('gfxBloom', 'off');
+  await openSettings();
+  if ((await page.inputValue('#gfx-cat-bloom')) !== 'off') throw new Error(`${name}: bloom override not restored after reload`);
+  await page.locator('#gfx-preset').scrollIntoViewIfNeeded();
+  await page.selectOption('#gfx-preset', 'ultra');
+  await expectAttr('gfxPreset', 'ultra');
+  await expectAttr('gfxBloom', 'on');
+  if ((await page.inputValue('#gfx-cat-bloom')) !== 'preset') throw new Error(`${name}: choosing a preset did not clear overrides`);
+  await page.waitForTimeout(400); // let an Ultra frame or two render (console must stay clean)
+  await page.selectOption('#gfx-preset', 'auto');
+  await expectAttr('gfxPreset', autoPreset);
+  await closeSettings();
+  ok(`${name}: Graphics settings — Low/High/override/Ultra applied, persisted across reload, Auto = ${autoPreset}`);
+}
+
 // ---------- one full pass ----------
 async function runPass(browser, name, ctxOpts, { full }) {
   const errors = [];
@@ -230,7 +298,7 @@ async function runPass(browser, name, ctxOpts, { full }) {
   const page = await context.newPage();
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   page.on('console', (m) => {
-    if (m.type() !== 'error' || browserNoise.test(m.text())) return;
+    if ((m.type() !== 'error' && m.type() !== 'warning') || browserNoise.test(m.text())) return;
     const url = m.location()?.url || '';
     if (/Failed to load resource/.test(m.text()) && /\/api\/|\/favicon|\/sfx\//.test(url)) return;
     errors.push(`console: ${m.text()}`);
@@ -272,12 +340,14 @@ async function runPass(browser, name, ctxOpts, { full }) {
       await page.waitForSelector('.dialog-backdrop:not(.hidden)', { timeout: 5000 });
       const setTitle = (await page.locator('.dialog-backdrop:not(.hidden) .dialog-title').textContent()).trim();
       if (!/Settings/.test(setTitle)) throw new Error(`unexpected settings title "${setTitle}"`);
-      await page.locator('.dialog-backdrop:not(.hidden) input[type="checkbox"]').check();
+      await page.locator('#mute-toggle').check();
       await page.screenshot({ path: SHOT('settings', name) });
       await page.locator('.dialog-backdrop:not(.hidden) .dialog-head button').click();
       await page.waitForFunction(() => !document.querySelector('.dialog-backdrop:not(.hidden)'));
       ok(`${name}: Settings dialog opens, mute toggles, and closes`);
     }
+
+    await graphicsPass(page, name);
 
     // start a real match through the visible New Game button
     await page.waitForSelector('#btn-new-game:not(.hidden)', { timeout: 5000 });

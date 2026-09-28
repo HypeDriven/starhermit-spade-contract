@@ -111,6 +111,14 @@ The Three.js canvas fills the game region but is never the only UI. Menus, text,
 
 The subject is the active playfield at near-tabletop to room scale, framed so state changes occupy most of the screen. The scene is a refined observatory card room. Use an authored camera, original procedural geometry, restrained environmental storytelling, and a deterministic visual seed. The no-post-processing baseline must still communicate hierarchy, depth, selection, and state.
 
+### Graphics
+
+The shipped build draws the table as semantic DOM over a 2D-canvas room. `fx.js` paints a night sky behind the page: a star field turning slowly around an off-screen pole with twinkle, a diagonal star band, brass orrery rings with hour ticks, a warm lamp pool over the table, drifting dust motes, and a colour grade (cool dome, warm floor) with vignette. A separate overlay throws gold sparks from the winning card when your team takes a trick (silver for the opponents) and a larger burst at match end. CSS quality hooks on `body[data-gfx-*]` add layered card and table drop shadows, a warm glow on highlights only (title, scores, primary button, playable cards, the winning card, which pulses gently), and surface detail: woven felt with a brass rim and inner shading, card stock with paper grain, bevel, inner frame and corner indices, plaque seat labels, and a short drop-in for the newest trick card. Trick cards sit at their player's compass point. Reduced motion stills the sky, drops sparks and dust, and removes the pulse and drop-in; nothing reduces the contrast of cards, text or controls, and the flat no-effects look stays fully readable.
+
+The Settings dialog has a **Graphics** section: Quality (Auto, chosen from the detected GPU via `WEBGL_debug_renderer_info` — software renderers get Low, discrete GPUs and Apple M get High, others Balanced, touch devices are capped at Balanced; Low; Balanced; High; Ultra), a render scale (50–200% of the preset's, for the sky canvas), one select per effect — Shadows (off/low/medium/high), Glow (off/on), Colour grade & vignette (off/on), Particles (off/low/high), Night sky (still/animated), Surface detail (plain/detailed) — each defaulting to "From preset (…)", Adaptive resolution (averages ~90 frames and steps the sky's resolution down to 60% when frames exceed 26 ms, back up above 14 ms), Show frame rate (a readout at the bottom-left), and a summary line "GPU · effects · W×H px". Choosing a preset clears overrides. Changes apply immediately and persist in localStorage (`spade-contract.gfx.v1`). The device pixel ratio is capped per preset (Low 1, Balanced 1.5, High/Ultra 2); Low draws the sky once and runs no animation loop. If the effects canvas cannot be created the game renders without it and the panel says so. The panel's strings are localized (en-US, en-GB, es-419, es-ES, de-DE, fr-FR, fr-CA, pt-BR, it-IT) from the browser language.
+
+Files: `gfx.js` (pure quality model: presets, categories, `detectPreset`, `resolve`, `choosePreset`, `presetTier`, `describe`), `fx.js` (sky/spark canvases, CSS hooks, adaptive resolution, persistence), `gfx-panel.js` (Graphics section + strings), `tests/gfx.test.js` (unit tests; the e2e suite drives the panel on desktop and mobile).
+
 ### Three.js scene design
 
 - Use physically based lighting and color management with one dominant key, soft environment fill, and contact grounding. Gameplay colors are tested after tone mapping.
@@ -158,7 +166,7 @@ Follow the skill pack's acceptance gate: deterministic seeds, debug views for co
 - `bootstrap`: host handshake, capability detection, asset manifest, lifecycle.
 - `rules`: pure deterministic state transitions, legality, scoring, seeded random stream.
 - `session`: local or hosted commands, snapshots, prediction policy, reconnect, replay.
-- `render`: Three.js scene graph, semantic entity views, camera, lighting, VFX, quality.
+- `render`: Three.js scene graph, semantic entity views, camera, lighting, VFX, quality. The shipped build renders the room with `fx.js` (2D canvas) and quality settings from `gfx.js`/`gfx-panel.js`; see **Graphics**.
 - `ui`: responsive DOM shell, focus, localization, settings, overlays, accessibility mirror.
 - `audio`: buses, event mapping, focus/background behavior, decode and memory policy.
 - `content`: versioned levels, themes, tutorials, validation metadata.

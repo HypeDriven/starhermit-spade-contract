@@ -92,6 +92,7 @@ function buildSettingsDialog() {
   muteRow.className = 'setting-row';
   const mute = document.createElement('input');
   mute.type = 'checkbox';
+  mute.id = 'mute-toggle';
   const muteText = document.createElement('span');
   muteText.textContent = 'Mute sound effects';
   muteRow.appendChild(mute);
@@ -103,6 +104,7 @@ function buildSettingsDialog() {
   volText.textContent = 'Volume';
   const vol = document.createElement('input');
   vol.type = 'range';
+  vol.id = 'volume-slider';
   vol.min = '0';
   vol.max = '100';
   vol.value = '80';
@@ -126,10 +128,12 @@ function buildSettingsDialog() {
 
   frag.appendChild(muteRow);
   frag.appendChild(volRow);
+  if (window.GfxPanel && window.Fx) frag.appendChild(window.GfxPanel.build());
   return makeDialog('Settings', frag);
 }
 
 function boot() {
+  if (window.Fx) window.Fx.init();
   const helpDialog = buildHelpDialog();
   const settingsDialog = buildSettingsDialog();
 
