@@ -598,3 +598,7 @@ body[data-gfx-bloom="on"][data-gfx-motion="full"] .card.winner { animation: gfx-
 .gfx-scale-value { flex: 0 0 auto; min-width: 3.2em; text-align: right; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
 .gfx-summary { margin: 8px 0 0 !important; color: var(--ink-dim); font-size: 0.85rem; overflow-wrap: anywhere; }
 .gfx-note { margin: 6px 0 0 !important; color: var(--accent); font-size: 0.85rem; }
+
+/* --- StarHermit account: avatar in the chip, toast --- */
+.player-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+.sh-toast { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 90; max-width: min(92vw, 520px); margin: 0; padding: 10px 16px; border-radius: 10px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); font-size: 0.9rem; text-align: center; overflow-wrap: anywhere; box-shadow: 0 6px 20px rgba(0,0,0,.35); }

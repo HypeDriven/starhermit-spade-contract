@@ -193,13 +193,14 @@ No module may mutate rules state except through a validated command. Rendering c
 
 ### Packaging and launch
 - Ship a browser distribution with `starhermit.txt` at its root, `name=Spade Contract`, and `launch=index.html`. Keep source files, secrets, design documents, and source maps outside the uploaded distribution.
-- Read the game scope from the short-lived launch token rather than hard-coding a slug. Use same-origin `/api` routes when hosted. Re-mint launch tokens via `POST /api/v1/games/{slug}/launch-token` on a 45-minute schedule; never persist access or launch tokens in local storage.
+- `starhermit-sdk.js` (unmodified copy of the canonical StarHermit SDK) loads before `platform.js` and `StarHermit.init()` runs inline at page load: it reads `#game_token=` (library launch) or `#access_token=` (sign-in return), strips it, takes the slug from the `game_scope` claim and renews the launch token before expiry. `platform.js` is a thin adapter over `window.StarHermit`; if renewal is refused the game shows a localized notice, re-offers sign-in and keeps playing locally. Without a token nothing touches the network; tokens are never persisted.
 - Synchronize countdowns and daily boundaries with `GET /api/v1/time` using round-trip-adjusted offset. Treat rate limits and structured `{"error":"..."}` responses as recoverable UI states.
 
 ### Identity, profile, presence, and preferences
-- Support guest practice locally, then offer account sign-in for durable progress. Use the profile display name only where identity is useful and honor profile privacy; the platform exposes no per-game presence endpoint to the launch token, so the client sends no presence traffic.
-- Store accessibility, audio, graphics tier, tutorial completion, camera preference, and rules options through per-game settings. Declare desktop action bindings and read player overrides; touch mappings remain responsive UI controls.
-- Cloud-save progression as a versioned, checksummed document. Resolve conflicts by preserving both snapshots and asking the player when neither is a strict descendant. Never place credentials or private chat in saves.
+- Guests play locally. On `*.starhermit.com` without a token the top bar shows **Sign in with StarHermit** (`StarHermit.signIn()`), hidden when signed in or running locally. Signed-in players get a profile chip with avatar, nickname (fallback `Player <id prefix>`) and cloud-sync status, and an **Invite a friend** button that copies `StarHermit.inviteLink()` with a toast. These controls are localized in all 9 locales (`sh-strings.js`). No presence traffic is sent.
+- Audio (mute, volume) and graphics settings are mirrored to the per-game settings KV when changed; on start the platform values win over the local ones.
+- The only keyboard action (Escape closes a dialog) is declared as `control.close` in `starhermit.txt` and routed by `event.code` through `StarHermit.loadBindings()`; play itself uses buttons.
+- The match snapshot is a versioned, checksummed document cloud-saved to slot `game:<slug>` via the SDK (remote preferred on load unless a newer local change is pending, debounced `saveJSON`, `flushSave(true)` on pagehide/hidden); localStorage stays the offline cache. Never place credentials or private chat in saves.
 
 ### Discovery, activity, and social layer
 - Launch activity start/end is owned by the platform shell, not the game client; the game itself must remain playable without promotional interruption.
@@ -213,6 +214,7 @@ No module may mutate rules state except through a validated command. Rendering c
 - Competitive outcomes, rating changes, and achievement unlocks are server-authoritative. Never accept a client-supplied winner, score, hidden state, or elapsed time as truth.
 
 ### Sessions and transport
+- This build is solo practice against local AI with no game script, so platform sessions, matchmaking, session invites, chat, achievements, leaderboards and replays are not used; the items below are the multiplayer design target.
 - Use the shared Games API for invitations, nearest-rating matchmaking where competitive, practice sessions against deterministic AI where suitable, session summaries, deadlines, move submission, and replays.
 - Run rules in a sandboxed authoritative JavaScript Game Script. Persist compact JSON state, whitelist public messages, reject out-of-turn or malformed input, use platform time for deadlines, and end through the authoritative result contract.
 - Use gameplay WebSocket events for immediate move/result updates, but make REST session detail the reconnect source of truth. The peer relay is unnecessary for the initial turn-based design.

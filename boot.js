@@ -121,15 +121,85 @@ function buildSettingsDialog() {
 
   mute.addEventListener('change', () => {
     if (window.Sfx) window.Sfx.setMuted(mute.checked);
+    pushAudioSettings();
   });
   vol.addEventListener('input', () => {
     if (window.Sfx) window.Sfx.setVolume(Number(vol.value) / 100);
   });
+  vol.addEventListener('change', pushAudioSettings);
 
   frag.appendChild(muteRow);
   frag.appendChild(volRow);
   if (window.GfxPanel && window.Fx) frag.appendChild(window.GfxPanel.build());
   return makeDialog('Settings', frag);
+}
+
+/* --- StarHermit: settings KV mirror, sign-in / invite, sign-out notice --- */
+
+function pushAudioSettings() {
+  if (window.Sfx) window.Platform.pushSettings(window.Sfx.getSettings());
+}
+
+// Graphics changes from the Settings panel are mirrored to the platform KV.
+let setGraphicsLocal = null;
+function mirrorGraphics() {
+  if (!window.Fx) return;
+  const setGraphics = setGraphicsLocal = window.Fx.setGraphics;
+  window.Fx.setGraphics = (next) => {
+    setGraphics(next);
+    window.Platform.pushSettings({ graphics: Object.assign({}, next) });
+  };
+}
+
+// Signed in: the platform's settings win over the local ones.
+function applyPlatformSettings() {
+  window.Platform.loadSettings().then((s) => {
+    if (!s) return;
+    if (window.Sfx) {
+      if (typeof s.muted === 'boolean') window.Sfx.setMuted(s.muted);
+      if (typeof s.volume === 'number') window.Sfx.setVolume(s.volume);
+      const cur = window.Sfx.getSettings();
+      const mute = document.getElementById('mute-toggle');
+      const vol = document.getElementById('volume-slider');
+      if (mute) mute.checked = cur.muted;
+      if (vol) vol.value = String(Math.round(cur.volume * 100));
+    }
+    if (window.Fx && s.graphics && typeof s.graphics === 'object') (setGraphicsLocal || window.Fx.setGraphics)(s.graphics);
+  });
+}
+
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('sh-toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.add('hidden'), 3200);
+}
+
+function refreshAccount() {
+  const P = window.Platform;
+  document.getElementById('btn-signin').classList.toggle('hidden', !P.canSignIn());
+  document.getElementById('btn-invite').classList.toggle('hidden', !P.inviteLink());
+}
+
+function wireAccount() {
+  const L = window.ShStrings.strings(window.GfxPanel ? window.GfxPanel.locale : 'en-US');
+  const signIn = document.getElementById('btn-signin');
+  const invite = document.getElementById('btn-invite');
+  signIn.textContent = L.signIn;
+  invite.textContent = L.invite;
+  signIn.addEventListener('click', () => { playUi('uiClick'); window.Platform.signIn(); });
+  invite.addEventListener('click', () => {
+    playUi('uiClick');
+    const link = window.Platform.inviteLink();
+    if (!link) return;
+    const fail = () => toast(L.copyFailed + ': ' + link);
+    try { navigator.clipboard.writeText(link).then(() => toast(L.copied), fail); } catch (_e) { fail(); }
+  });
+  window.Platform.onSignedOut(() => { refreshAccount(); toast(L.signedOut); });
+  refreshAccount();
 }
 
 function boot() {
@@ -155,9 +225,12 @@ function boot() {
   if (newGameBtn) newGameBtn.classList.remove('hidden');
 
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && openDialog) { playUi('uiClick'); closeDialog(); }
+    if (window.Platform.actionFor(e.code) === 'close' && openDialog) { playUi('uiClick'); closeDialog(); }
   });
 
+  mirrorGraphics();
+  wireAccount();
+  applyPlatformSettings();
   window.Game.init();
 }
 

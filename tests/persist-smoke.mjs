@@ -3,7 +3,7 @@
  * Flow: New Game -> bid once -> play one legal card -> reload the page ->
  * the same match is restored from the save doc (localStorage is the offline
  * cache; the hosted cloud path is the same doc mirrored via
- * /api/v1/me/cloud-saves/{slug}) -> play continues on the restored match.
+ * /api/v1/me/cloud-saves/game:{slug}) -> play continues on the restored match.
  * All assertions are DOM-based: no game code is modified and no internal
  * state is published, matching the e2e conventions in tests/e2e.mjs.
  */

@@ -5,7 +5,7 @@
  *   - Bearer auth on every /api/v1 call; gameKey from game_scope
  *   - nickname via GET /api/v1/users/{sub}/profile (never /api/v1/me, never
  *     the username), with the 'Player '+id8 fallback when the profile 404s
- *   - cloud save PUT (zip+base64) after the 2 s debounce, remote-preferred
+ *   - cloud save PUT (zip+base64, slot game:<slug>) after the 2 s debounce, remote-preferred
  *     load after reload, and the visible sync status chip
  *
  * Run: npm run test:hosted  (or: node tests/hosted-smoke.mjs)
@@ -42,14 +42,14 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify({ id: SUB, username: USERNAME, nickname: 'Ada Lovelace' }));
         return;
       }
-      if (p === '/api/v1/me/cloud-saves/' + SLUG && req.method === 'GET') {
+      if (p === '/api/v1/me/cloud-saves/game%3A' + SLUG && req.method === 'GET') {
         const saved = cloud.get(SLUG);
         if (!saved) { res.writeHead(404).end(); return; }
         res.writeHead(200, { 'Content-Type': 'application/zip' });
         res.end(Buffer.from(saved, 'base64'));
         return;
       }
-      if (p === '/api/v1/me/cloud-saves/' + SLUG && req.method === 'PUT') {
+      if (p === '/api/v1/me/cloud-saves/game%3A' + SLUG && req.method === 'PUT') {
         let body = '';
         req.on('data', (c) => { body += c; });
         req.on('end', () => {
@@ -121,8 +121,10 @@ try {
     const stored = cloud.get(SLUG);
     check(!!stored, 'cloud save PUT received a zip payload');
     const doc = await page.evaluate((b64) => {
-      const bytes = window.Platform.__zip.base64ToBytes(b64);
-      return JSON.parse(new TextDecoder().decode(window.Platform.__zip.unzipFirstEntry(bytes)));
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return window.StarHermit._unzip(bytes).then((d) => JSON.parse(new TextDecoder().decode(d)));
     }, stored);
     check(doc && doc.version === 1 && doc.match && doc.match.round === 1 && doc.match.roundState.hands[0].length === 13, 'stored zip decodes to the in-progress match doc');
 
@@ -146,7 +148,7 @@ try {
     await page.waitForFunction(() => !document.getElementById('player-chip').classList.contains('hidden'), null, { timeout: 8000 });
     await page.waitForFunction(() => document.getElementById('player-name').textContent.length > 0, null, { timeout: 8000 });
     const name = await page.evaluate(() => document.getElementById('player-name').textContent);
-    check(name === 'Player ' + SUB.slice(0, 8), 'nickname falls back to "Player "+id8 (' + name + ')');
+    check(name === 'Player ' + SUB.slice(0, 6), 'nickname falls back to "Player "+id prefix (' + name + ')');
     check(page.errors.length === 0, 'no page errors (hosted pass 2)' + (page.errors.length ? ': ' + page.errors.join(' | ') : ''));
     await ctx.close();
   }

@@ -7,12 +7,15 @@
 <title>Spade Contract</title>
 <link rel="stylesheet" href="./style.css" />
 <script src="./rules.js"></script>
+<script src="./starhermit-sdk.js"></script>
+<script>StarHermit.init();</script>
 <script src="./platform.js"></script>
 <script src="./ui.js"></script>
 <script src="./sfx.js"></script>
 <script src="./gfx.js"></script>
 <script src="./fx.js"></script>
 <script src="./gfx-panel.js"></script>
+<script src="./sh-strings.js"></script>
 <script src="browser-guard.js"></script>
 </head>
 <body>
@@ -22,12 +25,15 @@
     <h1 class="game-title">Spade Contract</h1>
     <div class="round-info" aria-live="polite"><span id="round-label">Round 0 / 5</span></div>
     <div id="player-chip" class="player-chip hidden">
+      <img id="player-avatar" class="player-avatar hidden" alt="" width="24" height="24">
       <span id="player-name" class="player-name"></span>
       <span id="sync-status" class="sync-status" data-sync="offline" role="status"></span>
     </div>
     <nav class="top-actions" aria-label="Menu actions">
       <button type="button" data-action="help" class="btn btn-secondary">Help</button>
       <button type="button" data-action="settings" class="btn btn-secondary">Settings</button>
+      <button type="button" id="btn-signin" class="btn btn-secondary hidden">Sign in with StarHermit</button>
+      <button type="button" id="btn-invite" class="btn btn-secondary hidden">Invite a friend</button>
       <button type="button" data-action="new-game" id="btn-new-game" class="btn btn-primary hidden">New Game</button>
     </nav>
   </header>
@@ -67,6 +73,7 @@
   </main>
 
 </div>
+<p id="sh-toast" class="sh-toast hidden" role="status" aria-live="polite"></p>
 
 <script src="./boot.js"></script>
 <script>Sfx.bind();</script>
