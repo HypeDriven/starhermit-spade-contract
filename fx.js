@@ -251,7 +251,7 @@ window.Fx = (() => {
       const p = bursts[i];
       p.life -= dt;
       if (p.life <= 0) { bursts.splice(i, 1); continue; }
-      p.vy += 0.00045 * dt;
+      p.vy += 0.00045 * (p.g || 1) * dt;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       const k = p.life / p.max;
@@ -408,6 +408,7 @@ window.Fx = (() => {
     if (!rect.width) return;
     const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
     const rnd = Math.random;
+    const k = (window.UIScale && window.UIScale.value) || 1; // sparks grow with the zoomed UI
     for (let i = 0; i < count; i++) {
       const a = rnd() * Math.PI * 2;
       const v = 0.08 + rnd() * 0.22;
@@ -415,9 +416,9 @@ window.Fx = (() => {
       bursts.push({
         x: cx + (rnd() - 0.5) * rect.width * 0.6,
         y: cy + (rnd() - 0.5) * rect.height * 0.6,
-        vx: Math.cos(a) * v, vy: Math.sin(a) * v - 0.12,
+        vx: Math.cos(a) * v * k, vy: (Math.sin(a) * v - 0.12) * k, g: k,
         life: life, max: life,
-        s: 2 + rnd() * 3,
+        s: (2 + rnd() * 3) * k,
         c: palette[(rnd() * palette.length) | 0],
       });
     }

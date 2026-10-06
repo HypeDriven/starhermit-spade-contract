@@ -13,7 +13,7 @@
   --card: #f7f4ec;
   --red: #b3243a;
   --line: #2c4356;
-  --card-w: clamp(38px, 10vw, 54px);
+  --card-w: clamp(38px, calc(10vw / var(--ui-scale, 1)), 54px);
   --gap: 12px;
 }
 
@@ -33,10 +33,15 @@ body {
 
 .hidden { display: none !important; }
 
+/* Large screens: ui-scale.js sets --ui-scale (1 up to 1600x1000); the DOM UI
+   layers zoom by it and every vw/vh inside them is divided by it. The fx
+   canvases stay unzoomed (full viewport). */
+#app, body > .dialog-backdrop, .sh-toast, .fx-fps { zoom: var(--ui-scale, 1); }
+
 #app {
   position: relative;
   z-index: 1;
-  min-height: 100vh;
+  min-height: calc(100vh / var(--ui-scale, 1));
   display: flex;
   flex-direction: column;
 }
@@ -55,7 +60,7 @@ body {
 
 .game-title {
   margin: 0;
-  font-size: clamp(1.1rem, 4vw, 1.5rem);
+  font-size: clamp(1.1rem, calc(4vw / var(--ui-scale, 1)), 1.5rem);
   letter-spacing: 0.04em;
   color: var(--accent);
   white-space: nowrap;
@@ -336,8 +341,8 @@ button.card.blocked { opacity: 0.45; }
   border: 1px solid var(--line);
   border-radius: 12px;
   width: min(520px, 100%);
-  max-height: calc(100vh - 48px);
-  max-height: calc(100dvh - 48px);
+  max-height: calc(calc(100vh / var(--ui-scale, 1)) - 48px);
+  max-height: calc(calc(100dvh / var(--ui-scale, 1)) - 48px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -394,7 +399,7 @@ button.card.blocked { opacity: 0.45; }
 
   .side-panel { order: 3; }
 
-  :root { --card-w: clamp(34px, 9.5vw, 48px); }
+  :root { --card-w: clamp(34px, calc(9.5vw / var(--ui-scale, 1)), 48px); }
 }
 
 @media (max-width: 480px) {
@@ -405,6 +410,16 @@ button.card.blocked { opacity: 0.45; }
   .top-actions { width: 100%; }
 
   .top-actions .btn { flex: 1 1 auto; }
+
+  /* both team scores on one line so more of the hand fits above the fold */
+  .score-panel { flex-wrap: nowrap; gap: 12px; padding: 6px 10px; }
+  .score-panel .score-row { flex: 1 1 0; min-width: 0; align-items: center; }
+  .score-row .label { font-size: 0.78rem; line-height: 1.25; }
+  .score-row .value { font-size: 1.25rem; }
+  .table-panel { padding: 6px; gap: 4px; }
+  .hand { padding: 2px; }
+  .side-panel { padding: 10px; }
+  .cards { margin-top: 6px; }
 
   .content { padding: var(--gap) calc(var(--gap) + env(safe-area-inset-right, 0px)) calc(var(--gap) + env(safe-area-inset-bottom, 0px)) calc(var(--gap) + env(safe-area-inset-left, 0px)); }
 }
@@ -419,7 +434,7 @@ button.card.blocked { opacity: 0.45; }
    hand are always visible together --- */
 @media (max-height: 500px) and (orientation: landscape) {
   :root { --card-w: 40px; --gap: 6px; }
-  #app { height: 100dvh; min-height: 0; }
+  #app { height: calc(100dvh / var(--ui-scale, 1)); min-height: 0; }
   .topbar { padding: calc(4px + env(safe-area-inset-top, 0px)) 10px 4px; gap: 4px 10px; }
   .topbar .btn { min-height: 36px; padding: 4px 10px; }
   .content {
@@ -437,7 +452,11 @@ button.card.blocked { opacity: 0.45; }
   .side-panel .status-text { margin: 2px 0 6px; font-size: 0.85rem; }
   .side-panel > * { flex: 0 0 auto; }
   .trick-list { flex: 1 1 2em; min-height: 1.5em; overflow: auto; font-size: 0.85rem; margin: 0; }
-  .side-panel .bid-btn { margin: 2px 4px 2px 0; }
+  /* bid buttons share one row so the hand stays visible while bidding */
+  .side-panel { flex-flow: row wrap; align-content: flex-start; }
+  .side-panel > * { flex: 0 0 100%; min-width: 0; }
+  .side-panel > .trick-list { flex: 0 0 100%; }
+  .side-panel > .bid-btn { flex: 0 0 auto; margin: 2px 4px 2px 0; min-height: 40px; }
   .cards { margin-top: 6px; gap: 6px; }
   .score-panel .score-row { font-size: 0.85rem; }
   .trick-slot { min-height: calc(var(--card-w) * 1.42 + 2px); }
@@ -601,4 +620,4 @@ body[data-gfx-bloom="on"][data-gfx-motion="full"] .card.winner { animation: gfx-
 
 /* --- StarHermit account: avatar in the chip, toast --- */
 .player-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
-.sh-toast { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 90; max-width: min(92vw, 520px); margin: 0; padding: 10px 16px; border-radius: 10px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); font-size: 0.9rem; text-align: center; overflow-wrap: anywhere; box-shadow: 0 6px 20px rgba(0,0,0,.35); }
+.sh-toast { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 90; max-width: min(calc(92vw / var(--ui-scale, 1)), 520px); margin: 0; padding: 10px 16px; border-radius: 10px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); font-size: 0.9rem; text-align: center; overflow-wrap: anywhere; box-shadow: 0 6px 20px rgba(0,0,0,.35); }
