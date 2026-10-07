@@ -214,15 +214,16 @@ No module may mutate rules state except through a validated command. Rendering c
 - Declare a small static achievement set: first completion, mechanic mastery, a sustained streak, a difficult content milestone, and an accessibility-neutral long-term goal. Keys are stable, lowercase identifiers; unlocks are idempotent.
 - Provide global and friends-filtered boards for the primary metric plus a fair daily/weekly board. Include ruleset, content version, seed, assists, and duration with every submission; reject impossible or stale-version scores.
 - Competitive outcomes, rating changes, and achievement unlocks are server-authoritative. Never accept a client-supplied winner, score, hidden state, or elapsed time as truth.
+- Shipped today: signed in, every finished 5-round match posts your team's (Team A) final score through `StarHermit.submitScores` (a practice session whose `score-script.js` range-checks it and posts it to the `high-score` board "Match score", integer, higher is better, −1000–1000), and the Results panel shows "Leaderboard rank: #N" (or posted / not posted; localized in `sh-strings.js`). The score is client-reported and range-checked only. Standalone posts nothing and shows no line. Achievements are not implemented.
 
 ### Sessions and transport
-- This build is solo practice against local AI with no game script, so platform sessions, matchmaking, session invites, chat, achievements, leaderboards and replays are not used; the items below are the multiplayer design target.
+- This build is solo practice against local AI; its only platform script is `score-script.js` (leaderboard posting), so matchmaking, session invites, chat, achievements and replays are not used; the items below are the multiplayer design target.
 - Use the shared Games API for invitations, nearest-rating matchmaking where competitive, practice sessions against deterministic AI where suitable, session summaries, deadlines, move submission, and replays.
 - Run rules in a sandboxed authoritative JavaScript Game Script. Persist compact JSON state, whitelist public messages, reject out-of-turn or malformed input, use platform time for deadlines, and end through the authoritative result contract.
 - Use gameplay WebSocket events for immediate move/result updates, but make REST session detail the reconnect source of truth. The peer relay is unnecessary for the initial turn-based design.
 
 ### Publishing and operations
-- This build is a fully client-side practice game: rules run in the browser against AI and the distribution declares no authoritative game script. `server.js` is the game's own static file server for local development and packaging (declared as `server=server.js` like the rest of the fleet); it is not a Jint game script and owns no game endpoints.
+- This build is a fully client-side practice game: rules run in the browser against AI. The platform script is `score-script.js` (declared as `server=score-script.js`; canonical copy in the games repo's `tools/score-script.js`), which only range-checks and posts match scores. `server.js` is the game's own static file server for local development; it owns no game endpoints.
 - Define control defaults, achievement metadata, and versioned settings before release. Publish immutable build assets, verify the launch path, maintain migration tests for saves, and expose no secret configuration to the client.
 - Capture anonymous funnel events only for start, tutorial step, round end, retry, settings change, and error category. Avoid raw text, precise personal data, and cross-title tracking.
 

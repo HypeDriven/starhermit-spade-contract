@@ -185,8 +185,23 @@ function init() {
   return loadSave();
 }
 
+/** Post a finished match's team score to the high-score board (score-script.js);
+ *  resolves { posted, rank } (rank or null). No request standalone. */
+function submitScore(score) {
+  const sh = SH();
+  if (!hosted()) return Promise.resolve({ posted: false, rank: null });
+  return sh.submitScores({ 'high-score': score }).then((keys) => {
+    if (!keys || keys.indexOf('high-score') < 0) return { posted: false, rank: null };
+    return sh.leaderboard('high-score', { pageSize: 100 }).then((r) => {
+      const me = ((r && r.items) || []).find((i) => i.userId === sh.userId);
+      return { posted: true, rank: me ? me.rank : null };
+    }, () => ({ posted: true, rank: null }));
+  }, () => ({ posted: false, rank: null }));
+}
+
 const api = {
   init: init,
+  submitScore: submitScore,
   isHosted: hosted,
   nickname: () => state.nickname,
   sync: () => state.sync,

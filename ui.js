@@ -345,6 +345,24 @@ function advanceAI() {
   }
 }
 
+// Signed in only: post your team's final match score and show the board rank.
+let lbSeq = 0;
+function postToLeaderboard(score) {
+  const line = $('results-lb');
+  const seq = ++lbSeq;
+  if (!line) return;
+  line.hidden = true;
+  if (!window.Platform || !window.Platform.isHosted()) return;
+  const L = window.ShStrings.strings(window.GfxPanel ? window.GfxPanel.locale : 'en-US');
+  line.hidden = false;
+  line.textContent = L.lbPosting;
+  window.Platform.submitScore(score).then((r) => {
+    if (seq !== lbSeq) return;
+    line.textContent = !r.posted ? L.lbNotPosted
+      : r.rank ? L.lbRank.replace('{rank}', r.rank) : L.lbPosted;
+  });
+}
+
 function onRoundScored(result) {
   const a = result.teams[0];
   const b = result.teams[1];
@@ -354,6 +372,7 @@ function onRoundScored(result) {
       : (result.winner === 0 ? 'Team A (your team) wins the contract!'
         : 'Team B wins the contract.');
     sfx(result.winner === 0 ? 'gameWin' : 'gameLose');
+    postToLeaderboard(a.total);
     if (window.Fx) window.Fx.matchOver(result.winner === 0);
   } else {
     $('phase-title').textContent = 'Round ' + result.round + ' scored';
