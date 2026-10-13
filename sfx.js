@@ -46,7 +46,7 @@ window.Sfx = (() => {
 
   function tone(bus, freq, dur, gain, type, when, glideTo) {
     const t = ctx.currentTime + (when || 0);
-    const osc = ctx.createOscillator();
+    const osc = (globalThis.GameOptions ? globalThis.GameOptions.trackSource(ctx.createOscillator(), bus) : ctx.createOscillator());
     const g = ctx.createGain();
     osc.type = type || 'sine';
     osc.frequency.setValueAtTime(freq, t);
@@ -64,7 +64,7 @@ window.Sfx = (() => {
     const buf = ctx.createBuffer(1, len, ctx.sampleRate);
     const data = buf.getChannelData(0);
     for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
-    const src = ctx.createBufferSource();
+    const src = (globalThis.GameOptions ? globalThis.GameOptions.trackSource(ctx.createBufferSource(), bus) : ctx.createBufferSource());
     src.buffer = buf;
     const filt = ctx.createBiquadFilter();
     filt.type = filterType || 'bandpass';
@@ -218,7 +218,7 @@ window.Sfx = (() => {
     if (!unlocked || muted) return;
     const cached = samples.get(def.sample);
     if (cached instanceof AudioBuffer) {
-      const src = ctx.createBufferSource();
+      const src = (globalThis.GameOptions ? globalThis.GameOptions.trackSource(ctx.createBufferSource(), event) : ctx.createBufferSource());
       src.buffer = cached;
       src.connect(fxBus);
       src.start();
