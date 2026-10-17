@@ -3,8 +3,8 @@
 /* Spade Contract — Graphics section of the Settings dialog.
  * Builds the controls (quality preset, render scale, one select per effect
  * category, adaptive resolution, frame-rate readout, cost summary) on top of
- * window.Fx / window.Gfx. The game has no i18n system, so only these panel
- * strings are localized, picked from navigator.language. */
+ * window.Fx / window.Gfx. The strings follow the game language (window.SCI18N,
+ * i18n.js) and relabel in place on `sc-language`. */
 
 window.GfxPanel = (() => {
   const STRINGS = {
@@ -116,8 +116,8 @@ window.GfxPanel = (() => {
     return 'en-US';
   }
 
-  const locale = pickLocale(typeof navigator !== 'undefined' ? navigator.language : 'en-US');
-  const T = STRINGS[locale];
+  let locale = pickLocale(window.SCI18N ? window.SCI18N.lang : 'en-US');
+  let T = STRINGS[locale];
   const fmt = (s, tier) => s.replace('{tier}', tier);
 
   function el(tag, cls, text) {
@@ -133,15 +133,18 @@ window.GfxPanel = (() => {
     const Fx = window.Fx;
     const root = el('section', 'gfx-section');
     root.id = 'gfx-section';
-    root.setAttribute('lang', locale);
+    // Visible labels, re-applied with the new strings on a language change.
+    const relabels = [];
     root.setAttribute('aria-labelledby', 'gfx-heading');
     const h = el('h3', 'gfx-heading', T.graphics);
+    relabels.push(() => { h.textContent = T.graphics; });
     h.id = 'gfx-heading';
     root.appendChild(h);
 
     function row(labelText, control, id) {
       const r = el('div', 'gfx-row');
-      const lab = el('label', 'gfx-label', labelText);
+      const lab = el('label', 'gfx-label', labelText());
+      relabels.push(() => { lab.textContent = labelText(); });
       lab.htmlFor = id;
       control.id = id;
       r.appendChild(lab);
@@ -153,7 +156,7 @@ window.GfxPanel = (() => {
     // quality preset
     const preset = el('select', 'gfx-select');
     preset.dataset.gfx = 'preset';
-    row(T.quality, preset, 'gfx-preset');
+    row(() => T.quality, preset, 'gfx-preset');
 
     // render scale
     const scaleWrap = el('div', 'gfx-scale');
@@ -168,6 +171,7 @@ window.GfxPanel = (() => {
     scaleWrap.appendChild(scaleOut);
     const scaleRow = el('div', 'gfx-row');
     const scaleLab = el('label', 'gfx-label', T.renderScale);
+    relabels.push(() => { scaleLab.textContent = T.renderScale; });
     scaleLab.htmlFor = 'gfx-scale';
     scaleRow.appendChild(scaleLab);
     scaleRow.appendChild(scaleWrap);
@@ -179,7 +183,7 @@ window.GfxPanel = (() => {
       const s = el('select', 'gfx-select');
       s.dataset.gfx = cat;
       catSelects[cat] = s;
-      row(T.cats[cat], s, 'gfx-cat-' + cat);
+      row(() => T.cats[cat], s, 'gfx-cat-' + cat);
     });
 
     function toggle(text, id, key) {
@@ -189,12 +193,14 @@ window.GfxPanel = (() => {
       c.id = id;
       c.dataset.gfx = key;
       r.appendChild(c);
-      r.appendChild(el('span', '', text));
+      const span = el('span', '', text());
+      relabels.push(() => { span.textContent = text(); });
+      r.appendChild(span);
       root.appendChild(r);
       return c;
     }
-    const adaptive = toggle(T.adaptive, 'gfx-adaptive', 'adaptive');
-    const fps = toggle(T.showFps, 'gfx-fps', 'show_fps');
+    const adaptive = toggle(() => T.adaptive, 'gfx-adaptive', 'adaptive');
+    const fps = toggle(() => T.showFps, 'gfx-fps', 'show_fps');
 
     const summary = el('p', 'gfx-summary');
     summary.id = 'gfx-summary';
@@ -263,8 +269,14 @@ window.GfxPanel = (() => {
 
     Fx.onChange(refresh);
     refresh();
+    document.addEventListener('sc-language', () => {
+      locale = pickLocale(window.SCI18N ? window.SCI18N.lang : 'en-US');
+      T = STRINGS[locale];
+      relabels.forEach((fn) => fn());
+      refresh(); // option lists rebuild because their text changed
+    });
     return root;
   }
 
-  return { build, pickLocale, STRINGS, locale };
+  return { build, pickLocale, STRINGS, get locale() { return locale; } };
 })();

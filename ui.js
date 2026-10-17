@@ -7,9 +7,15 @@
 
 window.Game = (() => {
 
+// Text goes through window.SCI18N (i18n.js); English source strings are the keys.
+const T = (key, vars) => (window.SCI18N ? window.SCI18N.T(key, vars)
+  : String(key).replace(/\{(\w+)\}/g, (m, k) => (vars && k in vars ? vars[k] : m)));
+
 const SUIT_GLYPH = { S: '♠', H: '♥', D: '♦', C: '♣' };
-const SUIT_NAME = { S: 'Spades', H: 'Hearts', D: 'Diamonds', C: 'Clubs' };
-const SEAT_LABEL = ['South (You)', 'West', 'North (Partner)', 'East'];
+const SUIT_NAME = { S: () => T('Spades'), H: () => T('Hearts'), D: () => T('Diamonds'), C: () => T('Clubs') };
+const SEAT_NAMES = [() => T('South (You)'), () => T('West'), () => T('North (Partner)'), () => T('East')];
+const SEAT_SHORT = [() => T('South'), () => T('West'), () => T('North'), () => T('East')];
+const seatLabel = (seat) => SEAT_NAMES[seat]();
 const HUMAN = 0;
 const AI_DELAY = 650;
 const TRICK_PAUSE = 1100;
@@ -61,7 +67,7 @@ function cardText(card) {
 }
 
 function cardAria(card) {
-  return card.rank + ' of ' + SUIT_NAME[card.suit];
+  return T('{rank} of {suit}', { rank: card.rank, suit: SUIT_NAME[card.suit]() });
 }
 
 /* --- rendering --- */
@@ -69,9 +75,9 @@ function cardAria(card) {
 function renderScores() {
   $('score-a').textContent = String(match ? match.scores[0] : 0);
   $('score-b').textContent = String(match ? match.scores[1] : 0);
-  $('round-label').textContent = match
-    ? 'Round ' + Math.max(match.round, 1) + ' / ' + window.Rules.ROUNDS_PER_MATCH
-    : 'Round 0 / 5';
+  $('round-label').textContent = T('Round {n} / {total}', {
+    n: match ? Math.max(match.round, 1) : 0, total: window.Rules.ROUNDS_PER_MATCH,
+  });
 }
 
 function renderHands() {
@@ -81,19 +87,19 @@ function renderHands() {
     el.innerHTML = '';
     const label = document.createElement('span');
     label.className = 'seat-label';
-    label.textContent = SEAT_LABEL[seat];
+    label.textContent = seatLabel(seat);
     el.appendChild(label);
     if (rs) {
       const count = document.createElement('span');
       count.className = 'seat-count';
       const cardsLeft = rs.hands[seat].length;
-      count.textContent = rs.phase === 'bid' ? 'bidding' : cardsLeft + ' cards';
+      count.textContent = rs.phase === 'bid' ? T('bidding') : T('{n} cards', { n: cardsLeft });
       el.appendChild(count);
     }
   });
 }
 
-function renderTrick() {
+function renderTrick(relabelOnly) {
   const area = $('trick-area');
   area.innerHTML = '';
   const rs = match && match.roundState;
@@ -110,9 +116,9 @@ function renderTrick() {
       if (rs.lastTrickWinner === seat && rs.trick.length === 4) {
         c.classList.add('winner');
         const done = rs.tricksWon.reduce((a, b) => a + b, 0);
-        if (window.Fx) window.Fx.trickWon(c, match.seed + ':' + match.round + ':' + done, window.Rules.teamOf(seat) === 0);
+        if (window.Fx && !relabelOnly) window.Fx.trickWon(c, match.seed + ':' + match.round + ':' + done, window.Rules.teamOf(seat) === 0);
       }
-      c.setAttribute('aria-label', cardAria(played.card) + ', ' + SEAT_LABEL[seat]);
+      c.setAttribute('aria-label', cardAria(played.card) + ', ' + seatLabel(seat));
       slot.appendChild(c);
     } else {
       const ghost = document.createElement('div');
@@ -145,7 +151,7 @@ function renderPlayerHand() {
       // follow-suit rule, so they are described rather than marked disabled.
       if (!playable) {
         if (rs.currentSeat === HUMAN && rs.leadSuit) {
-          btn.setAttribute('aria-label', cardAria(card) + ', not playable, must follow ' + SUIT_NAME[rs.leadSuit]);
+          btn.setAttribute('aria-label', T('{card}, not playable, must follow {suit}', { card: cardAria(card), suit: SUIT_NAME[rs.leadSuit]() }));
         }
       }
     }
@@ -169,18 +175,21 @@ function renderTrickList() {
   if (!rs) return;
   window.Rules.SEATS.forEach((seatName, seat) => {
     const li = document.createElement('li');
-    li.textContent = SEAT_LABEL[seat] + ': ' + rs.tricksWon[seat];
+    li.textContent = T('{seat}: {n}', { seat: seatLabel(seat), n: rs.tricksWon[seat] });
     list.appendChild(li);
   });
 }
 
+/* Status line: a thunk, so a language change re-renders the same message. */
+let statusText = null;
 function renderStatus(text) {
-  $('bid-status').textContent = text;
+  statusText = typeof text === 'function' ? text : () => text;
+  $('bid-status').textContent = statusText();
 }
 
 function bidSummary() {
   const rs = match.roundState;
-  return rs.bids.map((b, i) => SEAT_LABEL[i].split(' ')[0] + ' ' + (b === null ? '…' : b)).join(' · ');
+  return rs.bids.map((b, i) => SEAT_SHORT[i]() + ' ' + (b === null ? '…' : b)).join(' · ');
 }
 
 function renderPhase() {
@@ -188,29 +197,47 @@ function renderPhase() {
   const title = $('phase-title');
   $('results-panel').classList.toggle('hidden', !(match && match.over));
   if (!match || !rs) {
-    title.textContent = 'Welcome';
-    renderStatus('Press New Game to start a match.');
+    title.textContent = T('Welcome');
+    renderStatus(() => T('Press New Game to start a match.'));
     return;
   }
   if (match.over) {
-    title.textContent = 'Results';
+    title.textContent = T('Results');
     return;
   }
   if (rs.phase === 'bid') {
-    title.textContent = 'Bid';
+    title.textContent = T('Bid');
     renderStatus(rs.currentBidder === HUMAN
-      ? 'Your bid: how many tricks will you take? (' + bidSummary() + ')'
-      : SEAT_LABEL[rs.currentBidder] + ' is bidding… (' + bidSummary() + ')');
+      ? () => T('Your bid: how many tricks will you take? ({bids})', { bids: bidSummary() })
+      : () => T('{seat} is bidding… ({bids})', { seat: seatLabel(rs.currentBidder), bids: bidSummary() }));
   } else if (rs.phase === 'play') {
     const teamA = rs.bids[0] + rs.bids[2];
     const teamB = rs.bids[1] + rs.bids[3];
-    title.textContent = 'Play';
+    title.textContent = T('Play');
     renderStatus(rs.currentSeat === HUMAN
-      ? 'Your turn — play a highlighted card. Contracts: A ' + teamA + ', B ' + teamB + '.'
-      : SEAT_LABEL[rs.currentSeat] + ' is playing… Contracts: A ' + teamA + ', B ' + teamB + '.');
+      ? () => T('Your turn — play a highlighted card. Contracts: A {a}, B {b}.', { a: teamA, b: teamB })
+      : () => T('{seat} is playing… Contracts: A {a}, B {b}.', { seat: seatLabel(rs.currentSeat), a: teamA, b: teamB }));
   } else {
-    title.textContent = 'Round ' + match.round + ' scored';
+    title.textContent = T('Round {n} scored', { n: match.round });
   }
+}
+
+/* Language change: relabel everything from the current state in place — no
+ * new deal, no AI step, no save, no replayed trick animation. */
+function relabel() {
+  const status = statusText;
+  renderScores();
+  renderHands();
+  renderTrick(true);
+  renderPlayerHand();
+  renderTrickList();
+  renderPhase();
+  if (status) renderStatus(status);
+  if (resultText) {
+    $('final-score').textContent = resultText.score();
+    $('winner-line').textContent = resultText.winner();
+  }
+  if (lbText) $('results-lb').textContent = lbText();
 }
 
 function render() {
@@ -261,6 +288,8 @@ function resumeMatch(saved) {
   generation++;
   clearPending();
   busy = false;
+  resultText = null;
+  lbText = null;
   match = m;
   const rs = match.roundState;
   if (!match.over && (!rs || rs.phase === 'scored')) {
@@ -288,6 +317,8 @@ function newMatch() {
   generation++;
   clearPending();
   busy = false;
+  resultText = null;
+  lbText = null;
   match = window.Rules.createMatch();
   window.Rules.dealRound(match);
   sfx('cardDeal');
@@ -316,7 +347,8 @@ function advanceAI() {
   if (rs.phase === 'play') {
     if (rs.trick.length === 4) {
       busy = true;
-      renderStatus(SEAT_LABEL[rs.lastTrickWinner] + ' wins the trick.');
+      const winner = rs.lastTrickWinner;
+      renderStatus(() => T('{seat} wins the trick.', { seat: seatLabel(winner) }));
       later(() => {
         const result = window.Rules.collectTrick(match);
         sfx(window.Rules.teamOf(rs.lastTrickWinner) === 0 ? 'trickWin' : 'trickLose');
@@ -347,19 +379,23 @@ function advanceAI() {
 
 // Signed in only: post your team's final match score and show the board rank.
 let lbSeq = 0;
+let lbText = null;    // thunk for the leaderboard line (follows the language)
+let resultText = null; // thunks for the final score / winner lines
+const shText = () => window.ShStrings.strings(window.SCI18N ? window.SCI18N.lang : 'en-US');
 function postToLeaderboard(score) {
   const line = $('results-lb');
   const seq = ++lbSeq;
+  lbText = null;
   if (!line) return;
   line.hidden = true;
   if (!window.Platform || !window.Platform.isHosted()) return;
-  const L = window.ShStrings.strings(window.GfxPanel ? window.GfxPanel.locale : 'en-US');
   line.hidden = false;
-  line.textContent = L.lbPosting;
+  lbText = () => shText().lbPosting;
+  line.textContent = lbText();
   window.Platform.submitScore(score).then((r) => {
     if (seq !== lbSeq) return;
-    line.textContent = !r.posted ? L.lbNotPosted
-      : r.rank ? L.lbRank.replace('{rank}', r.rank) : L.lbPosted;
+    lbText = () => { const L = shText(); return !r.posted ? L.lbNotPosted : r.rank ? L.lbRank.replace('{rank}', r.rank) : L.lbPosted; };
+    line.textContent = lbText();
   });
 }
 
@@ -367,17 +403,22 @@ function onRoundScored(result) {
   const a = result.teams[0];
   const b = result.teams[1];
   if (result.gameOver) {
-    $('final-score').textContent = 'Final — Team A: ' + a.total + ' · Team B: ' + b.total;
-    $('winner-line').textContent = result.winner === 2 ? 'The match is a tie.'
-      : (result.winner === 0 ? 'Team A (your team) wins the contract!'
-        : 'Team B wins the contract.');
+    resultText = {
+      score: () => T('Final — Team A: {a} · Team B: {b}', { a: a.total, b: b.total }),
+      winner: () => (result.winner === 2 ? T('The match is a tie.')
+        : (result.winner === 0 ? T('Team A (your team) wins the contract!') : T('Team B wins the contract.'))),
+    };
+    $('final-score').textContent = resultText.score();
+    $('winner-line').textContent = resultText.winner();
     sfx(result.winner === 0 ? 'gameWin' : 'gameLose');
     postToLeaderboard(a.total);
     if (window.Fx) window.Fx.matchOver(result.winner === 0);
   } else {
-    $('phase-title').textContent = 'Round ' + result.round + ' scored';
-    renderStatus('A: bid ' + a.contract + ', took ' + a.taken + ' (' + (a.delta >= 0 ? '+' : '') + a.delta + ') · ' +
-      'B: bid ' + b.contract + ', took ' + b.taken + ' (' + (b.delta >= 0 ? '+' : '') + b.delta + ')');
+    $('phase-title').textContent = T('Round {n} scored', { n: result.round });
+    const sign = (d) => (d >= 0 ? '+' : '') + d;
+    renderStatus(() => T('A: bid {bidA}, took {tookA} ({deltaA}) · B: bid {bidB}, took {tookB} ({deltaB})', {
+      bidA: a.contract, tookA: a.taken, deltaA: sign(a.delta), bidB: b.contract, tookB: b.taken, deltaB: sign(b.delta),
+    }));
     sfx('roundEnd');
   }
   render();
@@ -405,7 +446,8 @@ function onCardClick(idx) {
   const rs = match && match.roundState;
   if (!rs || match.over || rs.phase !== 'play' || rs.currentSeat !== HUMAN || busy) return;
   if (!window.Rules.isLegal(match, HUMAN, idx)) {
-    renderStatus('You must follow ' + SUIT_NAME[rs.leadSuit] + ' if you can.');
+    const lead = rs.leadSuit;
+    renderStatus(() => T('You must follow {suit} if you can.', { suit: SUIT_NAME[lead]() }));
     sfx('invalidMove');
     return;
   }
@@ -422,10 +464,18 @@ function init() {
   match = null;
   render();
   resumeSavedMatch();
+  document.addEventListener('sc-language', relabel);
+  if (window.Platform && window.Platform.onConflict) window.Platform.onConflict(adoptMatch);
 }
+
+/* Cloud-save conflict: the platform picked another device's snapshot of this
+ * match (further along) — continue from it. */
+function adoptMatch(saved) { resumeMatch(saved); }
 
 return {
   init: init,
+  adoptMatch: adoptMatch,
+  currentMatch: () => match,
   newMatch: newMatch,
   onBid: onBid,
   onCardClick: onCardClick,

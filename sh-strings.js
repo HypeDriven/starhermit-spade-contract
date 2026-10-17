@@ -1,8 +1,8 @@
 'use strict';
 
 /* Spade Contract — localized strings for the StarHermit account controls
- * (sign-in, invite link, sign-out notice), keyed by the Settings panel's
- * locale. Browser global: window.ShStrings. */
+ * (sign-in, invite link, sign-out notice, leaderboard line), keyed by the
+ * game language (window.SCI18N.lang). Browser global: window.ShStrings. */
 (function (global) {
   const EN = {
     signIn: 'Sign in with StarHermit',

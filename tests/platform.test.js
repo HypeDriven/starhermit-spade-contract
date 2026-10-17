@@ -48,7 +48,7 @@ test('hosted: token, nickname, cloud save game:<slug>, settings, bindings, sign-
     if (path === `/api/v1/users/${USER}/profile`) return res(200, { username: 'ada_1815', nickname: 'Ada Lovelace' });
     if (path === `/api/v1/users/${USER}/avatar`) return res(404);
     if (path === '/api/v1/me/cloud-saves/' + encodeURIComponent('game:' + SLUG)) {
-      if (method === 'PUT') { save = Buffer.from(JSON.parse(init.body).dataBase64, 'base64'); return res(204); }
+      if (method === 'PUT') { save = Buffer.from(JSON.parse(init.body).dataBase64, 'base64'); return res(200, { etag: '"v' + calls.length + '"' }); }
       return save ? res(200, new Uint8Array(save)) : res(404);
     }
     if (path === `/api/v1/games/${SLUG}/settings`) {
@@ -117,7 +117,104 @@ test('standalone: local cache only, no fetch', async () => {
 });
 
 test('on <id>.starhermit.com without a token: sign-in offered', () => {
-  const sh = SDK.create({ window: win('', 'spade-contract.starhermit.com'), fetch: async () => res(500) });
+  // canSignIn() is only true on a game's UUID host (<uuid>.starhermit.com).
+  const sh = SDK.create({ window: win('', '0b9d6f2e-3c4a-4e5b-9a7c-1d2e3f405162.starhermit.com'), fetch: async () => res(500) });
   sh.init();
   assert.equal(fresh(sh).canSignIn(), true);
+});
+
+// Cloud-save conflicts: another device saved since our load, so the SDK refuses
+// the conditional write; the platform reloads and keeps the snapshot with more
+// progress, then writes it on top of the other device's version.
+async function conflictRig() {
+  mem.clear();
+  const slot = '/api/v1/me/cloud-saves/' + encodeURIComponent('game:' + SLUG);
+  const zipOf = async (doc) => {
+    let bytes = null;
+    const z = SDK.create({ window: win('#game_token=' + TOKEN), fetch: async (u, init = {}) => {
+      if (init.method === 'PUT') { bytes = Buffer.from(JSON.parse(init.body).dataBase64, 'base64'); return res(200, { etag: '"z"' }); }
+      return res(404);
+    }, setTimeout: () => 0, clearTimeout() {} });
+    z.init();
+    await z.writeSave(JSON.stringify(doc));
+    return bytes;
+  };
+  const rig = { stored: null, etag: null, puts: [] };
+  const fetch = async (url, init = {}) => {
+    const method = init.method || 'GET', path = url.split('?')[0];
+    if (path === slot + '/info') return res(200, { exists: !!rig.stored, etag: rig.etag });
+    if (path === slot && method === 'GET') return res(200, new Uint8Array(rig.stored));
+    if (path === slot && method === 'PUT') {
+      const match = init.headers['If-Match'];
+      rig.puts.push(match || init.headers['If-None-Match']);
+      if ((match && match !== rig.etag) || (!match && rig.stored)) return res(412, { error: 'precondition_failed' });
+      rig.stored = Buffer.from(JSON.parse(init.body).dataBase64, 'base64');
+      rig.etag = '"v' + rig.puts.length + '"';
+      return res(200, { etag: rig.etag });
+    }
+    return res(404);
+  };
+  const sh = SDK.create({ window: win('#game_token=' + TOKEN), fetch, setTimeout: () => 0, clearTimeout() {} });
+  sh.init();
+  rig.P = fresh(sh);
+  rig.sh = sh;
+  // Another device writes its own snapshot (with the checksum platform.js verifies).
+  rig.otherDevice = async (match) => {
+    const doc = { version: 1, savedAt: new Date().toISOString(), match };
+    doc.checksum = checksumFor(doc);
+    rig.stored = await zipOf(doc);
+    rig.etag = '"other"';
+  };
+  return rig;
+}
+function checksumFor(d) {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+  const bytes = new TextEncoder().encode(JSON.stringify({ version: d.version, savedAt: d.savedAt, match: d.match }));
+  let c = 0xffffffff;
+  for (let i = 0; i < bytes.length; i++) c = t[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+const settle = () => new Promise((r) => setTimeout(r, 10));
+
+test('save conflict: another device got further in this match → continue from its snapshot', async () => {
+  const rig = await conflictRig();
+  assert.equal(await rig.P.init(), null);
+  let adopted = null;
+  rig.P.onConflict((m) => { adopted = m; });
+  rig.P.scheduleSave({ seed: 7, round: 1, tick: 5, over: false, scores: [0, 0] });
+  await rig.P.flushSave();
+  await rig.otherDevice({ seed: 7, round: 2, tick: 40, over: false, scores: [20, 10] });
+  rig.P.scheduleSave({ seed: 7, round: 1, tick: 6, over: false, scores: [0, 0] });
+  await rig.P.flushSave();
+  await settle();
+  assert.equal(rig.sh.saveConflicted(), false, 'reloaded after the refused write');
+  assert.deepEqual(adopted, { seed: 7, round: 2, tick: 40, over: false, scores: [20, 10] });
+});
+
+test('save conflict: this device is further along → keep it and write it over the other version', async () => {
+  const rig = await conflictRig();
+  await rig.P.init();
+  let adopted = null;
+  rig.P.onConflict((m) => { adopted = m; });
+  rig.P.scheduleSave({ seed: 7, round: 3, tick: 90, over: false, scores: [40, 10] });
+  await rig.P.flushSave();
+  await rig.otherDevice({ seed: 7, round: 1, tick: 12, over: false, scores: [0, 0] });
+  rig.P.scheduleSave({ seed: 7, round: 3, tick: 91, over: false, scores: [40, 10] });
+  await rig.P.flushSave();
+  await settle();
+  assert.equal(adopted, null, 'the local match stays on screen');
+  await rig.P.flushSave();
+  assert.equal(rig.puts.at(-1), '"other"', 'merged write is conditional on the reloaded version');
+  assert.equal(rig.P.sync(), 'synced');
+});
+
+test('pickMatch keeps the snapshot with more progress', () => {
+  const P = fresh(SDK.create({ window: win(''), fetch: async () => res(500) }));
+  const live = { seed: 1, tick: 3, over: false };
+  const done = { seed: 1, tick: 9, over: true };
+  assert.equal(P.pickMatch(live, done, true), live, 'a match in play beats a finished one');
+  assert.equal(P.pickMatch(null, live, false), live);
+  assert.equal(P.pickMatch({ seed: 1, tick: 8, over: false }, live, true).tick, 8, 'same match: further along');
+  assert.equal(P.pickMatch({ seed: 2, tick: 1, over: false }, live, true), live, 'different matches: preferred side');
 });

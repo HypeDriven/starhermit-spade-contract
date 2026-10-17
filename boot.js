@@ -5,6 +5,15 @@
 
 (function () {
 
+const T = (key, vars) => (window.SCI18N ? window.SCI18N.T(key, vars) : key);
+// [element, () => text] pairs re-applied on a language change (sc-language).
+const labels = [];
+function label(el, text, attr) {
+  const apply = () => { const v = text(); if (attr) el.setAttribute(attr, v); else el.textContent = v; };
+  labels.push(apply);
+  apply();
+}
+
 let openDialog = null;
 let lastFocused = null;
 
@@ -36,7 +45,7 @@ function makeDialog(title, bodyNode) {
   wrap.className = 'dialog-backdrop hidden';
   wrap.setAttribute('role', 'dialog');
   wrap.setAttribute('aria-modal', 'true');
-  wrap.setAttribute('aria-label', title);
+  label(wrap, () => T(title), 'aria-label');
 
   const panel = document.createElement('div');
   panel.className = 'dialog-panel';
@@ -45,11 +54,11 @@ function makeDialog(title, bodyNode) {
   head.className = 'dialog-head';
   const h = document.createElement('h2');
   h.className = 'dialog-title';
-  h.textContent = title;
+  label(h, () => T(title));
   const close = document.createElement('button');
   close.type = 'button';
   close.className = 'btn btn-secondary';
-  close.textContent = 'Close';
+  label(close, () => T('Close'));
   close.addEventListener('click', () => { playUi('uiClick'); closeDialog(); });
   head.appendChild(h);
   head.appendChild(close);
@@ -70,18 +79,23 @@ function makeDialog(title, bodyNode) {
 
 function buildHelpDialog() {
   const frag = document.createElement('div');
-  frag.innerHTML =
-    '<p><strong>Goal:</strong> across five rounds, your team (South and North) ' +
-    'bids how many tricks it will take, then tries to make that contract.</p>' +
-    '<ul>' +
-    '<li>Each player bids 0–3 tricks. Your team\'s contract is the sum of its bids.</li>' +
-    '<li>South leads the first trick; afterwards the winner of a trick leads the next one.</li>' +
-    '<li>You must follow the led suit if you can.</li>' +
-    '<li>Spades are always trump and beat every other suit.</li>' +
-    '<li>Highest trump — or highest card of the led suit — wins the trick; the winner leads next.</li>' +
-    '<li>Make your contract: +10 per trick bid, +1 per extra trick. Miss it: −10 per trick bid.</li>' +
-    '<li>After five rounds the team with the higher score wins.</li>' +
-    '</ul>';
+  const goal = document.createElement('p');
+  const strong = document.createElement('strong');
+  const goalText = document.createTextNode('');
+  goal.append(strong, ' ', goalText);
+  label(strong, () => T('Goal:'));
+  label(goalText, () => T('across five rounds, your team (South and North) bids how many tricks it will take, then tries to make that contract.'));
+  const list = document.createElement('ul');
+  [
+    () => T('Each player bids 0–3 tricks. Your team\'s contract is the sum of its bids.'),
+    () => T('South leads the first trick; afterwards the winner of a trick leads the next one.'),
+    () => T('You must follow the led suit if you can.'),
+    () => T('Spades are always trump and beat every other suit.'),
+    () => T('Highest trump — or highest card of the led suit — wins the trick; the winner leads next.'),
+    () => T('Make your contract: +10 per trick bid, +1 per extra trick. Miss it: −10 per trick bid.'),
+    () => T('After five rounds the team with the higher score wins.'),
+  ].forEach((text) => { const li = document.createElement('li'); label(li, text); list.appendChild(li); });
+  frag.append(goal, list);
   return makeDialog('How to play', frag);
 }
 
@@ -94,21 +108,21 @@ function buildSettingsDialog() {
   mute.type = 'checkbox';
   mute.id = 'mute-toggle';
   const muteText = document.createElement('span');
-  muteText.textContent = 'Mute sound effects';
+  label(muteText, () => T('Mute sound effects'));
   muteRow.appendChild(mute);
   muteRow.appendChild(muteText);
 
   const volRow = document.createElement('label');
   volRow.className = 'setting-row';
   const volText = document.createElement('span');
-  volText.textContent = 'Volume';
+  label(volText, () => T('Volume'));
   const vol = document.createElement('input');
   vol.type = 'range';
   vol.id = 'volume-slider';
   vol.min = '0';
   vol.max = '100';
   vol.value = '80';
-  vol.setAttribute('aria-label', 'Effects volume');
+  label(vol, () => T('Effects volume'), 'aria-label');
 
   // reflect the stored audio preferences so the controls match what is heard
   if (window.Sfx && typeof window.Sfx.getSettings === 'function') {
@@ -185,20 +199,20 @@ function refreshAccount() {
 }
 
 function wireAccount() {
-  const L = window.ShStrings.strings(window.GfxPanel ? window.GfxPanel.locale : 'en-US');
+  const L = () => window.ShStrings.strings(window.SCI18N ? window.SCI18N.lang : 'en-US');
   const signIn = document.getElementById('btn-signin');
   const invite = document.getElementById('btn-invite');
-  signIn.textContent = L.signIn;
-  invite.textContent = L.invite;
+  label(signIn, () => L().signIn);
+  label(invite, () => L().invite);
   signIn.addEventListener('click', () => { playUi('uiClick'); window.Platform.signIn(); });
   invite.addEventListener('click', () => {
     playUi('uiClick');
     const link = window.Platform.inviteLink();
     if (!link) return;
-    const fail = () => toast(L.copyFailed + ': ' + link);
-    try { navigator.clipboard.writeText(link).then(() => toast(L.copied), fail); } catch (_e) { fail(); }
+    const fail = () => toast(L().copyFailed + ': ' + link);
+    try { navigator.clipboard.writeText(link).then(() => toast(L().copied), fail); } catch (_e) { fail(); }
   });
-  window.Platform.onSignedOut(() => { refreshAccount(); toast(L.signedOut); });
+  window.Platform.onSignedOut(() => { refreshAccount(); toast(L().signedOut); });
   refreshAccount();
 }
 
@@ -230,6 +244,8 @@ function boot() {
 
   mirrorGraphics();
   wireAccount();
+  // Language change (Settings → Language): relabel the dialogs and account buttons in place.
+  document.addEventListener('sc-language', () => labels.forEach((apply) => apply()));
   applyPlatformSettings();
   window.Game.init();
 }

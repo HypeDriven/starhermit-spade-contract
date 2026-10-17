@@ -38,6 +38,7 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { launchToken, stubStarHermit } from './starhermit-e2e.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SHOT = (stage, vp) => `/tmp/spade-contract-e2e-${stage}-${vp}.png`;
@@ -291,6 +292,75 @@ async function graphicsPass(page, name) {
   ok(`${name}: Graphics settings — Low/High/override/Ultra applied, persisted across reload, Auto = ${autoPreset}`);
 }
 
+// ---------- Language + Report a problem (signed in against a stubbed StarHermit API) ----------
+// Reloads mid-match signed in: Automatic follows the account's preferredLanguage
+// (fr-CA); choosing Italian in Settings relabels the table, the dialog and the
+// score panel in place (the saved match resumes, nothing restarts) and saves
+// ui.language; Report a problem posts to /reports. The mobile pass also checks
+// German at 390 px: no horizontal overflow, account chip clear of the menu.
+async function languagePass(page, name) {
+  const vw = page.viewportSize().width;
+  const calls = await stubStarHermit(page, { preferredLanguage: 'fr-CA' });
+  const dialog = page.locator('.dialog-backdrop:not(.hidden)');
+  try {
+    await page.goto('about:blank');
+    await page.goto(BASE + '/index.html#game_token=' + launchToken(), { waitUntil: 'load' });
+    await page.waitForFunction(() => document.documentElement.lang === 'fr-CA' && !!window.Game);
+    const ng = (await page.textContent('#btn-new-game')).trim();
+    if (ng !== 'Nouvelle partie') throw new Error(`${name}: New Game not in French: "${ng}"`);
+    await page.locator('[data-action="settings"]').click();
+    await dialog.waitFor();
+    const choice = dialog.locator('[data-game-language="choice"]');
+    await choice.scrollIntoViewIfNeeded();
+    const autoLabel = await choice.locator('option').first().textContent();
+    if (autoLabel !== 'Automatique — Français (Canada)') throw new Error(`${name}: Automatic label not resolved: "${autoLabel}"`);
+    if ((await page.locator('[data-game-language="choice"]').count()) !== 1) throw new Error(`${name}: expected exactly one language selector`);
+    const bb = await choice.boundingBox();
+    if (!bb || bb.x < 0 || bb.x + bb.width > vw + 1) throw new Error(`${name}: language select cut off (${JSON.stringify(bb)})`);
+    await choice.selectOption('it-IT');
+    await page.waitForFunction(() => document.documentElement.lang === 'it-IT');
+    await page.waitForFunction(() => /Salvato/.test(document.querySelector('[data-game-language="status"]')?.textContent || ''));
+    if (calls.settings['ui.language']?.choice !== 'it-IT') throw new Error(`${name}: ui.language not saved: ${JSON.stringify(calls.settings)}`);
+    const title = (await dialog.locator('.dialog-title').textContent()).trim();
+    if (title !== 'Impostazioni') throw new Error(`${name}: dialog title not re-rendered: "${title}"`);
+    const teamA = (await page.locator('.score-row .label').first().textContent()).trim();
+    if (teamA !== 'Squadra A (Sud / Nord)') throw new Error(`${name}: score panel not re-rendered: "${teamA}"`);
+    const seat = (await page.locator('.hand-bottom .seat-label').textContent()).trim();
+    if (seat !== 'Sud (tu)') throw new Error(`${name}: seat label not re-rendered: "${seat}"`);
+    await dialog.locator('[data-game-report="title"]').scrollIntoViewIfNeeded();
+    await dialog.locator('[data-game-report="title"]').fill('Test report');
+    await dialog.locator('[data-game-report="send"]').click();
+    await page.waitForFunction(() => /Grazie/.test(document.querySelector('[data-game-report="status"]')?.textContent || ''));
+    if (!calls.reports?.[0] || calls.reports[0].kind !== 'bug') throw new Error(`${name}: report not posted`);
+    await page.screenshot({ path: SHOT('language', name) });
+    if (vw < 500) {
+      await choice.selectOption('de-DE');
+      await page.waitForFunction(() => document.documentElement.lang === 'de-DE');
+      await page.screenshot({ path: SHOT('settings-de', name) });
+      await dialog.locator('.dialog-head button').click();
+      await page.waitForFunction(() => !document.querySelector('.dialog-backdrop:not(.hidden)'));
+      await page.screenshot({ path: SHOT('table-de', name) });
+      const layout = await page.evaluate(() => {
+        const r = (sel) => document.querySelector(sel)?.getBoundingClientRect();
+        const chip = r('#player-chip'), nav = r('.top-actions');
+        const hit = chip && nav && chip.width && !(chip.right <= nav.left || nav.right <= chip.left || chip.bottom <= nav.top || nav.bottom <= chip.top);
+        return { overflow: document.documentElement.scrollWidth - window.innerWidth, chipOverMenu: !!hit };
+      });
+      if (layout.overflow > 1) throw new Error(`${name}: German layout overflows by ${layout.overflow}px`);
+      if (layout.chipOverMenu) throw new Error(`${name}: account chip overlaps the menu buttons`);
+      await page.locator('[data-action="settings"]').click();
+      await dialog.waitFor();
+    }
+    await choice.selectOption('auto');
+    await page.waitForFunction(() => document.documentElement.lang === 'fr-CA');
+    await dialog.locator('.dialog-head button').click();
+    await page.waitForFunction(() => !document.querySelector('.dialog-backdrop:not(.hidden)'));
+    ok(`${name}: Language — Automatic resolved to fr-CA, Italian relabelled the table live and saved ui.language, report posted`);
+  } finally {
+    await page.unroute(/\/api\/v1\//);
+  }
+}
+
 // ---------- one full pass ----------
 async function runPass(browser, name, ctxOpts, { full }) {
   const errors = [];
@@ -406,6 +476,7 @@ async function runPass(browser, name, ctxOpts, { full }) {
       await page.screenshot({ path: SHOT('mobile-play', name) });
       ok(`${name}: started a match, bid, and played ${played} cards via touchscreen.tap`);
     }
+    await languagePass(page, name);
   } finally {
     await context.close();
   }

@@ -17,6 +17,8 @@ const LOCAL_KEY = 'spade-contract.save.v1';
 const DEFAULT_CONTROLS = { close: ['Escape'] };
 
 const SH = () => global.StarHermit || null;
+const T = (key, vars) => (global.SCI18N ? global.SCI18N.T(key, vars)
+  : String(key).replace(/\{(\w+)\}/g, (m, k) => (vars && k in vars ? vars[k] : m)));
 
 const state = {
   nickname: null,
@@ -29,6 +31,7 @@ let lastCore = null;     // last serialized { version, match } — skip no-op wr
 let controls = { close: DEFAULT_CONTROLS.close.slice() };
 let wired = false;
 let signedOutHook = null;
+let conflictHook = null; // (match) => void: continue from another device's snapshot
 
 const hosted = () => { const sh = SH(); return !!(sh && sh.signedIn); };
 
@@ -79,18 +82,49 @@ function writeLocalDoc() {
 
 let dirty = false;
 
-/** Load the save doc: cloud when hosted (remote wins), else the local cache. */
+/**
+ * The single save slot holds one match snapshot, so "merging" two saves means
+ * keeping the snapshot with more progress: a match still in play beats a
+ * finished or empty one; two snapshots of the same match (same seed) keep the
+ * one further along (higher tick); otherwise `preferB` decides (this device's
+ * current match during play, the newer save at boot).
+ */
+function pickMatch(a, b, preferB) {
+  const live = (m) => !!(m && !m.over);
+  if (!a) return b || null;
+  if (!b) return a;
+  if (live(a) !== live(b)) return live(a) ? a : b;
+  if (a.seed === b.seed) return (Number(a.tick) || 0) > (Number(b.tick) || 0) ? a : b;
+  return preferB ? b : a;
+}
+
+/** Load the save doc: cloud when hosted, merged with the local cache (see pickMatch). */
 async function loadSave() {
   doc = readLocalDoc();
   if (!hosted()) { setSync('offline'); return doc; }
   const remote = await SH().loadJSON().catch(() => null);
   // A local change queued while the read was in flight is newer than it.
   if (!dirty && verifyDoc(remote)) {
-    doc = remote; // remote wins on conflict
-    writeLocalDoc();
+    const localNewer = !!(doc && String(doc.savedAt) > String(remote.savedAt));
+    const pick = pickMatch(remote.match, doc && doc.match, localNewer);
+    if (!doc || pick === remote.match) { doc = remote; writeLocalDoc(); }
+    else { lastCore = null; scheduleSave(doc.match); } // the cloud lacked this device's progress
   }
-  setSync('synced');
+  if (state.sync !== 'saving') setSync('synced');
   return doc;
+}
+
+/* Another device saved since our last load (the SDK refused the conditional
+ * write): reload, keep the snapshot with more progress, and save it back. */
+async function resolveConflict() {
+  const sh = SH();
+  const remote = await sh.loadJSON().catch(() => null);
+  if (sh.saveConflicted() || sh.saveLoadFailed()) { setSync('offline'); return; }
+  const local = doc && doc.match;
+  const pick = pickMatch(verifyDoc(remote) ? remote.match : null, local, true);
+  lastCore = null; // write even if the snapshot is unchanged: the cloud holds the other device's
+  if (pick && pick !== local && conflictHook) conflictHook(JSON.parse(JSON.stringify(pick)));
+  else scheduleSave(local);
 }
 
 /** Mirror the current match snapshot: localStorage now, cloud debounced. */
@@ -129,14 +163,14 @@ function renderChip() {
   const name = document.getElementById('player-name');
   const sync = document.getElementById('sync-status');
   const avatar = document.getElementById('player-avatar');
-  if (name) name.textContent = state.nickname || '';
+  if (name) name.textContent = state.nickname || (state.fallbackId ? T('Player {id}', { id: state.fallbackId }) : '');
   if (avatar) {
     if (state.avatar) avatar.src = state.avatar;
     avatar.classList.toggle('hidden', !state.avatar);
   }
   if (sync) {
-    sync.textContent = state.sync === 'synced' ? 'synced'
-      : state.sync === 'saving' ? 'saving…' : 'offline';
+    sync.textContent = state.sync === 'synced' ? T('synced')
+      : state.sync === 'saving' ? T('saving…') : T('offline');
     sync.setAttribute('data-sync', state.sync);
   }
 }
@@ -144,7 +178,8 @@ function renderChip() {
 async function loadProfile() {
   const sh = SH();
   const p = await sh.profile().catch(() => null);
-  state.nickname = p ? p.displayName : 'Player ' + String(sh.userId).slice(0, 6);
+  state.nickname = p ? p.displayName : null;
+  state.fallbackId = String(sh.userId).slice(0, 6);
   renderChip();
   state.avatar = await sh.avatarUrl().catch(() => null);
   renderChip();
@@ -157,6 +192,7 @@ function wire() {
   if (sh) {
     if (!sh.token) sh.init();
     sh.on('saved', (ok) => { if (ok) dirty = false; setSync(ok ? 'synced' : 'offline'); });
+    sh.on('saveconflict', () => { resolveConflict(); });
     sh.on('auth', (a) => {
       if (a.signedIn) return;
       state.nickname = null;
@@ -168,6 +204,7 @@ function wire() {
     window.addEventListener('pagehide', () => { flushSave(); });
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', () => { if (document.hidden) flushSave(); });
+      document.addEventListener('sc-language', renderChip);
     }
   }
 }
@@ -211,6 +248,9 @@ const api = {
   signIn: () => { const sh = SH(); return !!(sh && sh.signIn()); },
   inviteLink: () => (hosted() ? SH().inviteLink() : null),
   onSignedOut: (fn) => { signedOutHook = fn; },
+  /** fn(match): a save conflict picked another device's snapshot; the game continues from it. */
+  onConflict: (fn) => { conflictHook = fn; },
+  pickMatch: pickMatch,
   /** Player settings from the platform KV ({} standalone). */
   loadSettings: () => { wire(); return hosted() ? SH().getSettings().catch(() => ({})) : Promise.resolve({}); },
   /** Merge preference keys into the platform KV (no-op standalone). */
