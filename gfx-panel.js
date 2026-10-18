@@ -12,7 +12,7 @@ window.GfxPanel = (() => {
       graphics: 'Graphics', quality: 'Quality', auto: 'Auto (detected: {tier})', renderScale: 'Render scale',
       fromPreset: 'From preset ({tier})', adaptive: 'Adaptive resolution', showFps: 'Show frame rate',
       unavailable: 'Effects are unavailable in this browser; the table is drawn without them.',
-      reduced: 'Reduced motion is on: the sky and sparks stay still.', unknownGpu: 'Unknown GPU',
+      reduced: 'Reduced motion is on: the sky and sparks stay still.', unknownGpu: 'Unknown GPU', level: 'Level {n}',
       presets: { low: 'Low', balanced: 'Balanced', high: 'High', ultra: 'Ultra' },
       cats: { shadows: 'Shadows', bloom: 'Glow (bloom)', grade: 'Color grade & vignette', particles: 'Particles', background: 'Night sky', detail: 'Surface detail' },
       tiers: { off: 'Off', on: 'On', low: 'Low', medium: 'Medium', high: 'High', static: 'Still', animated: 'Animated', plain: 'Plain', detailed: 'Detailed' },
@@ -22,7 +22,7 @@ window.GfxPanel = (() => {
       graphics: 'Graphics', quality: 'Quality', auto: 'Auto (detected: {tier})', renderScale: 'Render scale',
       fromPreset: 'From preset ({tier})', adaptive: 'Adaptive resolution', showFps: 'Show frame rate',
       unavailable: 'Effects are unavailable in this browser; the table is drawn without them.',
-      reduced: 'Reduced motion is on: the sky and sparks stay still.', unknownGpu: 'Unknown GPU',
+      reduced: 'Reduced motion is on: the sky and sparks stay still.', unknownGpu: 'Unknown GPU', level: 'Level {n}',
       presets: { low: 'Low', balanced: 'Balanced', high: 'High', ultra: 'Ultra' },
       cats: { shadows: 'Shadows', bloom: 'Glow (bloom)', grade: 'Colour grade & vignette', particles: 'Particles', background: 'Night sky', detail: 'Surface detail' },
       tiers: { off: 'Off', on: 'On', low: 'Low', medium: 'Medium', high: 'High', static: 'Still', animated: 'Animated', plain: 'Plain', detailed: 'Detailed' },
@@ -32,7 +32,7 @@ window.GfxPanel = (() => {
       graphics: 'Gráficos', quality: 'Calidad', auto: 'Automática (detectada: {tier})', renderScale: 'Escala de renderizado',
       fromPreset: 'Según el ajuste ({tier})', adaptive: 'Resolución adaptable', showFps: 'Mostrar cuadros por segundo',
       unavailable: 'Los efectos no están disponibles en este navegador; la mesa se dibuja sin ellos.',
-      reduced: 'El movimiento reducido está activo: el cielo y las chispas quedan quietos.', unknownGpu: 'GPU desconocida',
+      reduced: 'El movimiento reducido está activo: el cielo y las chispas quedan quietos.', unknownGpu: 'GPU desconocida', level: 'Nivel {n}',
       presets: { low: 'Baja', balanced: 'Equilibrada', high: 'Alta', ultra: 'Ultra' },
       cats: { shadows: 'Sombras', bloom: 'Resplandor (bloom)', grade: 'Corrección de color y viñeta', particles: 'Partículas', background: 'Cielo nocturno', detail: 'Detalle de superficies' },
       tiers: { off: 'No', on: 'Sí', low: 'Bajas', medium: 'Medias', high: 'Altas', static: 'Quieto', animated: 'Animado', plain: 'Simple', detailed: 'Detallado' },
@@ -42,7 +42,7 @@ window.GfxPanel = (() => {
       graphics: 'Gráficos', quality: 'Calidad', auto: 'Automática (detectada: {tier})', renderScale: 'Escala de renderizado',
       fromPreset: 'Según el ajuste ({tier})', adaptive: 'Resolución adaptativa', showFps: 'Mostrar fotogramas por segundo',
       unavailable: 'Los efectos no están disponibles en este navegador; la mesa se dibuja sin ellos.',
-      reduced: 'El movimiento reducido está activado: el cielo y las chispas se quedan quietos.', unknownGpu: 'GPU desconocida',
+      reduced: 'El movimiento reducido está activado: el cielo y las chispas se quedan quietos.', unknownGpu: 'GPU desconocida', level: 'Nivel {n}',
       presets: { low: 'Baja', balanced: 'Equilibrada', high: 'Alta', ultra: 'Ultra' },
       cats: { shadows: 'Sombras', bloom: 'Resplandor (bloom)', grade: 'Etalonaje y viñeta', particles: 'Partículas', background: 'Cielo nocturno', detail: 'Detalle de superficies' },
       tiers: { off: 'No', on: 'Sí', low: 'Bajas', medium: 'Medias', high: 'Altas', static: 'Quieto', animated: 'Animado', plain: 'Sencillo', detailed: 'Detallado' },
@@ -52,7 +52,7 @@ window.GfxPanel = (() => {
       graphics: 'Grafik', quality: 'Qualität', auto: 'Automatisch (erkannt: {tier})', renderScale: 'Renderskalierung',
       fromPreset: 'Laut Voreinstellung ({tier})', adaptive: 'Adaptive Auflösung', showFps: 'Bildrate anzeigen',
       unavailable: 'Effekte sind in diesem Browser nicht verfügbar; der Tisch wird ohne sie dargestellt.',
-      reduced: 'Reduzierte Bewegung ist aktiv: Himmel und Funken bleiben still.', unknownGpu: 'Unbekannte GPU',
+      reduced: 'Reduzierte Bewegung ist aktiv: Himmel und Funken bleiben still.', unknownGpu: 'Unbekannte GPU', level: 'Stufe {n}',
       presets: { low: 'Niedrig', balanced: 'Ausgewogen', high: 'Hoch', ultra: 'Ultra' },
       cats: { shadows: 'Schatten', bloom: 'Leuchten (Bloom)', grade: 'Farbkorrektur & Vignette', particles: 'Partikel', background: 'Nachthimmel', detail: 'Oberflächendetails' },
       tiers: { off: 'Aus', on: 'An', low: 'Niedrig', medium: 'Mittel', high: 'Hoch', static: 'Still', animated: 'Animiert', plain: 'Schlicht', detailed: 'Detailliert' },
@@ -62,7 +62,7 @@ window.GfxPanel = (() => {
       graphics: 'Graphismes', quality: 'Qualité', auto: 'Auto (détectée : {tier})', renderScale: 'Échelle de rendu',
       fromPreset: 'Selon le préréglage ({tier})', adaptive: 'Résolution adaptative', showFps: 'Afficher les images par seconde',
       unavailable: 'Les effets ne sont pas disponibles dans ce navigateur ; la table est affichée sans eux.',
-      reduced: 'Le mouvement réduit est activé : le ciel et les étincelles restent immobiles.', unknownGpu: 'GPU inconnu',
+      reduced: 'Le mouvement réduit est activé : le ciel et les étincelles restent immobiles.', unknownGpu: 'GPU inconnu', level: 'Niveau {n}',
       presets: { low: 'Basse', balanced: 'Équilibrée', high: 'Haute', ultra: 'Ultra' },
       cats: { shadows: 'Ombres', bloom: 'Lueur (bloom)', grade: 'Étalonnage et vignette', particles: 'Particules', background: 'Ciel nocturne', detail: 'Détail des surfaces' },
       tiers: { off: 'Non', on: 'Oui', low: 'Basses', medium: 'Moyennes', high: 'Hautes', static: 'Immobile', animated: 'Animé', plain: 'Simple', detailed: 'Détaillé' },
@@ -72,7 +72,7 @@ window.GfxPanel = (() => {
       graphics: 'Graphiques', quality: 'Qualité', auto: 'Auto (détectée : {tier})', renderScale: 'Échelle de rendu',
       fromPreset: 'Selon le préréglage ({tier})', adaptive: 'Résolution adaptative', showFps: 'Afficher les images par seconde',
       unavailable: 'Les effets ne sont pas offerts dans ce navigateur; la table est affichée sans eux.',
-      reduced: 'Le mouvement réduit est activé : le ciel et les étincelles restent immobiles.', unknownGpu: 'GPU inconnu',
+      reduced: 'Le mouvement réduit est activé : le ciel et les étincelles restent immobiles.', unknownGpu: 'GPU inconnu', level: 'Niveau {n}',
       presets: { low: 'Basse', balanced: 'Équilibrée', high: 'Haute', ultra: 'Ultra' },
       cats: { shadows: 'Ombres', bloom: 'Lueur (bloom)', grade: 'Correction des couleurs et vignette', particles: 'Particules', background: 'Ciel nocturne', detail: 'Détail des surfaces' },
       tiers: { off: 'Non', on: 'Oui', low: 'Basses', medium: 'Moyennes', high: 'Hautes', static: 'Immobile', animated: 'Animé', plain: 'Simple', detailed: 'Détaillé' },
@@ -82,7 +82,7 @@ window.GfxPanel = (() => {
       graphics: 'Gráficos', quality: 'Qualidade', auto: 'Automática (detectada: {tier})', renderScale: 'Escala de renderização',
       fromPreset: 'Da predefinição ({tier})', adaptive: 'Resolução adaptável', showFps: 'Mostrar taxa de quadros',
       unavailable: 'Os efeitos não estão disponíveis neste navegador; a mesa é desenhada sem eles.',
-      reduced: 'O movimento reduzido está ativado: o céu e as faíscas ficam parados.', unknownGpu: 'GPU desconhecida',
+      reduced: 'O movimento reduzido está ativado: o céu e as faíscas ficam parados.', unknownGpu: 'GPU desconhecida', level: 'Nível {n}',
       presets: { low: 'Baixa', balanced: 'Equilibrada', high: 'Alta', ultra: 'Ultra' },
       cats: { shadows: 'Sombras', bloom: 'Brilho (bloom)', grade: 'Correção de cor e vinheta', particles: 'Partículas', background: 'Céu noturno', detail: 'Detalhe das superfícies' },
       tiers: { off: 'Desligado', on: 'Ligado', low: 'Baixas', medium: 'Médias', high: 'Altas', static: 'Parado', animated: 'Animado', plain: 'Simples', detailed: 'Detalhado' },
@@ -92,7 +92,7 @@ window.GfxPanel = (() => {
       graphics: 'Grafica', quality: 'Qualità', auto: 'Automatica (rilevata: {tier})', renderScale: 'Scala di rendering',
       fromPreset: 'Dal preset ({tier})', adaptive: 'Risoluzione adattiva', showFps: 'Mostra frequenza fotogrammi',
       unavailable: 'Gli effetti non sono disponibili in questo browser; il tavolo è disegnato senza.',
-      reduced: 'Il movimento ridotto è attivo: il cielo e le scintille restano fermi.', unknownGpu: 'GPU sconosciuta',
+      reduced: 'Il movimento ridotto è attivo: il cielo e le scintille restano fermi.', unknownGpu: 'GPU sconosciuta', level: 'Livello {n}',
       presets: { low: 'Bassa', balanced: 'Bilanciata', high: 'Alta', ultra: 'Ultra' },
       cats: { shadows: 'Ombre', bloom: 'Bagliore (bloom)', grade: 'Correzione colore e vignettatura', particles: 'Particelle', background: 'Cielo notturno', detail: 'Dettaglio superfici' },
       tiers: { off: 'No', on: 'Sì', low: 'Basse', medium: 'Medie', high: 'Alte', static: 'Fermo', animated: 'Animato', plain: 'Semplice', detailed: 'Dettagliato' },
@@ -242,7 +242,7 @@ window.GfxPanel = (() => {
       adaptive.checked = s.adaptive !== false;
       fps.checked = !!s.show_fps;
       const gpu = inf.gpu || T.unknownGpu;
-      summary.textContent = gpu + ' · ' + G.describe(r, inf.pixels, T.words);
+      summary.textContent = [gpu, inf.level != null ? T.level.replace('{n}', inf.level) : null, G.describe(r, inf.pixels, T.words)].filter(Boolean).join(' · ');
       const reduced = document.body.dataset.gfxMotion === 'reduced';
       const msg = inf.unavailable ? T.unavailable : (reduced ? T.reduced : '');
       note.textContent = msg;

@@ -1,10 +1,15 @@
 'use strict';
 
 /* Spade Contract — graphics quality model: presets, per-category overrides,
- * GPU detection and a cost summary. Pure (no DOM), shared by the effects
- * renderer (fx.js), the Graphics settings panel and the unit tests. */
+ * StarHermit hardware-level detection, per-preset effect budgets and a cost
+ * summary. Pure (no DOM), shared by the effects renderer (fx.js), the
+ * Graphics settings panel and the unit tests. */
 
 (function (root) {
+
+// gpu-level.js (shared StarHermit copy, window.StarHermitGpu) loads before this
+// script in the page; under node it is required directly.
+const GPU = typeof module !== 'undefined' && module.exports ? require('./gpu-level.js') : root.StarHermitGpu;
 
 const PRESETS = ['low', 'balanced', 'high', 'ultra'];
 
@@ -27,20 +32,63 @@ const TABLE = {
   ultra: { scale: 1.25, dprCap: 2, shadows: 'high', bloom: 'on', grade: 'on', particles: 'high', background: 'animated', detail: 'detailed' },
 };
 
-// Star counts per background tier and preset density (drawn on the backdrop canvas).
-const STARS = { low: 140, balanced: 220, high: 320, ultra: 420 };
+// Auto picks the preset from the StarHermit hardware level (0 = Galaxy S20 /
+// Intel UHD or weaker, 20 = RTX 5090, each level ~1.23x the one below): Low
+// from 0, Balanced from 4, High from 10, Ultra from 17. Phones, tablets and
+// <= 4 GB machines are capped at level 9; no WebGL at all rates level 0.
+const LEVELS = { low: 0, balanced: 4, high: 10, ultra: 17 };
 
-/** Best preset for this GPU, from the unmasked renderer string when the browser exposes it. */
-function detectPreset(gpu, opts) {
-  const g = String(gpu || '').toLowerCase();
-  const touch = !!(opts && opts.touch);
-  let p;
-  if (!g) p = opts && opts.noGl ? 'low' : 'balanced';
-  else if (/swiftshader|llvmpipe|softpipe|software|basic render|microsoft basic/.test(g)) p = 'low';
-  else if (/nvidia|geforce|rtx|gtx|quadro|radeon rx|radeon pro|amd radeon(?!.*graphics)|apple m\d/.test(g)) p = 'high';
-  else p = 'balanced';
-  if (touch && (p === 'high' || p === 'ultra')) p = 'balanced';
-  return p;
+/** Hardware level 0-20 for an unmasked renderer string plus StarHermitGpu.detectSystem() facts. */
+function detectLevel(gpu, system) {
+  if (!GPU) return LEVELS.balanced;
+  return GPU.detectLevel(Object.assign({ webgl: true, webgl2: true }, system || {}, { gpu: String(gpu || '') }));
+}
+
+/** The preset Auto starts from for a hardware level. */
+function presetForLevel(level) {
+  if (GPU) return GPU.presetForLevel(level, LEVELS);
+  return PRESETS.filter((p) => LEVELS[p] <= level).pop() || 'low';
+}
+
+/** Best preset for this GPU (the level already caps phones/tablets at Balanced). */
+function detectPreset(gpu, system) {
+  return presetForLevel(detectLevel(gpu, system));
+}
+
+/*
+ * Per-preset effect budget for the 2D effects layer. Each preset is tuned to
+ * hold 60 FPS on the weakest machine Auto gives it (Low -> level 0, Balanced
+ * -> 4, High -> 10, Ultra -> 17; measured with tests/gfx-bench.mjs). The cards,
+ * table and every control are identical on every preset — only the backdrop
+ * and effects change.
+ *   skyRes  backdrop canvas resolution as a share of the (capped) pixel ratio
+ *           — the sky is soft gradients and points, so it never needs full DPR
+ *   stars   stars on the backdrop, scaled with the level
+ *   halos   bloom halos drawn around the brightest stars (Bloom on)
+ *   motes   dust motes rising through the lamp light (Particles high), scaled with the level
+ *   sparks  sparks per won trick at Particles high (low: ~45%), scaled with the level
+ *   finale  sparks for the match-end burst at Particles high (low: ~45%)
+ */
+const BUDGETS = {
+  low: { skyRes: 1, stars: 140, halos: 0, motes: 0, sparks: 16, finale: 60 },
+  balanced: { skyRes: 0.75, stars: 220, halos: 16, motes: 24, sparks: 24, finale: 90 },
+  high: { skyRes: 1, stars: 320, halos: 40, motes: 46, sparks: 36, finale: 140 },
+  ultra: { skyRes: 1, stars: 420, halos: 64, motes: 64, sparks: 48, finale: 180 },
+};
+const STAR_MAX = 840;
+const MOTE_MAX = 128;
+
+/** A preset's concrete budget for a hardware level (counts scale <= 2x within the preset). */
+function budgetFor(preset, level) {
+  const b = Object.assign({}, BUDGETS[preset] || BUDGETS.balanced);
+  const floor = LEVELS[preset] || 0;
+  const lv = Math.max(Number.isFinite(level) ? level : floor, floor);
+  const k = GPU ? Math.min(2, GPU.scaleBudget(1, lv, floor)) : 1;
+  b.stars = Math.min(STAR_MAX, Math.round(b.stars * k));
+  b.motes = Math.min(MOTE_MAX, Math.round(b.motes * k));
+  b.sparks = Math.round(b.sparks * k);
+  b.finale = Math.round(b.finale * k);
+  return b;
 }
 
 function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
@@ -49,7 +97,7 @@ function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
  * Resolve saved settings into concrete tiers.
  * `saved`: { preset: 'auto'|preset, render_scale, adaptive, show_fps, <category>: 'preset'|tier }.
  */
-function resolve(saved, detected) {
+function resolve(saved, detected, level) {
   const s = saved || {};
   const preset = PRESETS.indexOf(s.preset) !== -1 ? s.preset : (PRESETS.indexOf(detected) !== -1 ? detected : 'balanced');
   const row = TABLE[preset];
@@ -60,11 +108,13 @@ function resolve(saved, detected) {
     userScale: userScale,
     scale: row.scale * userScale,
     dprCap: row.dprCap,
-    stars: STARS[preset],
   };
   Object.keys(CATEGORIES).forEach((cat) => {
     out[cat] = CATEGORIES[cat].indexOf(s[cat]) !== -1 ? s[cat] : row[cat];
   });
+  out.level = Number.isFinite(level) ? level : LEVELS[preset];
+  out.budget = budgetFor(preset, out.level);
+  out.stars = out.budget.stars;
   out.adaptive = s.adaptive !== false;
   out.showFps = !!s.show_fps;
   // The effects loop only runs when something moves (sky or dust motes); a static
@@ -103,7 +153,7 @@ function describe(r, pixels, words) {
   return parts.filter(Boolean).join(' · ');
 }
 
-const api = { PRESETS, CATEGORIES, TABLE, detectPreset, resolve, choosePreset, presetTier, describe, clamp };
+const api = { PRESETS, CATEGORIES, TABLE, LEVELS, BUDGETS, STAR_MAX, MOTE_MAX, budgetFor, detectLevel, presetForLevel, detectPreset, resolve, choosePreset, presetTier, describe, clamp };
 
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else root.Gfx = api;

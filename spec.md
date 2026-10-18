@@ -124,9 +124,38 @@ The subject is the active playfield at near-tabletop to room scale, framed so st
 
 The shipped build draws the table as semantic DOM over a 2D-canvas room. `fx.js` paints a night sky behind the page: a star field turning slowly around an off-screen pole with twinkle, a diagonal star band, brass orrery rings with hour ticks, a warm lamp pool over the table, drifting dust motes, and a colour grade (cool dome, warm floor) with vignette. A separate overlay throws gold sparks from the winning card when your team takes a trick (silver for the opponents) and a larger burst at match end. CSS quality hooks on `body[data-gfx-*]` add layered card and table drop shadows, a warm glow on highlights only (title, scores, primary button, playable cards, the winning card, which pulses gently), and surface detail: woven felt with a brass rim and inner shading, card stock with paper grain, bevel, inner frame and corner indices, plaque seat labels, and a short drop-in for the newest trick card. Trick cards sit at their player's compass point. Reduced motion stills the sky, drops sparks and dust, and removes the pulse and drop-in; nothing reduces the contrast of cards, text or controls, and the flat no-effects look stays fully readable.
 
-The Settings dialog has a **Graphics** section: Quality (Auto, chosen from the detected GPU via `WEBGL_debug_renderer_info` — software renderers get Low, discrete GPUs and Apple M get High, others Balanced, touch devices are capped at Balanced; Low; Balanced; High; Ultra), a render scale (50–200% of the preset's, for the sky canvas), one select per effect — Shadows (off/low/medium/high), Glow (off/on), Colour grade & vignette (off/on), Particles (off/low/high), Night sky (still/animated), Surface detail (plain/detailed) — each defaulting to "From preset (…)", Adaptive resolution (averages ~90 frames and steps the sky's resolution down to 60% when frames exceed 26 ms, back up above 14 ms), Show frame rate (a readout at the bottom-left), and a summary line "GPU · effects · W×H px". Choosing a preset clears overrides. Changes apply immediately and persist in localStorage (`spade-contract.gfx.v1`). The device pixel ratio is capped per preset (Low 1, Balanced 1.5, High/Ultra 2); Low draws the sky once and runs no animation loop. If the effects canvas cannot be created the game renders without it and the panel says so. The panel's strings are localized in the nine locales and follow the game language (see Localization).
+The Settings dialog has a **Graphics** section: Quality (Auto, chosen from the StarHermit hardware level below; Low; Balanced; High; Ultra), a render scale (50–200% of the preset's, for the sky canvas), one select per effect — Shadows (off/low/medium/high), Glow (off/on), Colour grade & vignette (off/on), Particles (off/low/high), Night sky (still/animated), Surface detail (plain/detailed) — each defaulting to "From preset (…)", Adaptive resolution (averages ~90 frames and steps the sky's resolution down to 60% when frames exceed 26 ms, back up above 14 ms), Show frame rate (a readout at the bottom-left), and a summary line "GPU · Level N · effects · W×H px" ("Level" localized). Choosing a preset clears overrides. Changes apply immediately and persist in localStorage (`spade-contract.gfx.v1`). The device pixel ratio is capped per preset (Low 1, Balanced 1.5, High/Ultra 2); Low draws the sky once and runs no animation loop. If the effects canvas cannot be created the game renders without it and the panel says so. The panel's strings are localized in the nine locales and follow the game language (see Localization).
 
-Files: `gfx.js` (pure quality model: presets, categories, `detectPreset`, `resolve`, `choosePreset`, `presetTier`, `describe`), `fx.js` (sky/spark canvases, CSS hooks, adaptive resolution, persistence), `gfx-panel.js` (Graphics section + strings), `tests/gfx.test.js` (unit tests; the e2e suite drives the panel on desktop and mobile).
+**Hardware-level detection.** `gpu-level.js` (shared StarHermit copy, `window.StarHermitGpu`, a classic script loaded before `gfx.js`, never edited here) rates the WebGL unmasked renderer plus device facts (`detectSystem()`: phone/tablet, cores, memory, screen) on the StarHermit hardware level 0–20 (0 = Galaxy S20 / Intel UHD or weaker, every software renderer and no WebGL; 20 = RTX 5090; each level ≈ 1.23×; laptop parts two levels below desktop; phones, tablets and ≤ 4 GB machines capped at 9). `gfx.js` maps it with `presetForLevel(level, { low: 0, balanced: 4, high: 10, ultra: 17 })`, so Auto picks Ultra on strong GPUs; adaptive resolution still steps down when slow. Headless SwiftShader is level 0 → Low. Phones and tablets pace Auto FPS at half the display refresh rate ("Auto (half refresh rate)") and start at 16 simultaneous sounds (shared `game-options.js`).
+
+**Per-preset budgets** (`BUDGETS` / `budgetFor` in `gfx.js`). Each preset holds 60 FPS on the weakest machine Auto gives it — Low at level 0, Balanced 4, High 10, Ultra 17. Cards, table, bids and every control are identical on every preset; only the 2D backdrop and effects change. Star, mote and spark counts are tuned at the floor level and scale up within the preset on faster GPUs (`StarHermitGpu.scaleBudget`, ≤ 2×, at most 840 stars / 128 motes).
+
+| Preset (floor level) | Pixel ratio cap / scale | Sky canvas resolution | Stars | Bloom halos | Dust motes | Sparks per won trick / match end |
+|---|---|---|---|---|---|---|
+| Low (0) | 1 / 1 | 1× (drawn once, no animation loop) | 140 | — (bloom off) | — (particles off) | — |
+| Balanced (4) | 1.5 / 1 | 0.75× | 220 | 16 | — (Particles low) | 11 / 41 (Particles low: 45 %) |
+| High (10) | 2 / 1 | 1× | 320 | 40 | 46 | 36 / 140 |
+| Ultra (17) | 2 / 1.25 | 1× | 420 | 64 | 64 | 48 / 180 |
+
+**Benchmark** (`node tools/gfx-bench.mjs spade-contract`; hook `tests/gfx-bench.mjs` picks the preset in Settings → Graphics, starts a New Game and keeps playing through the real bid buttons and the first legal card in the hand, so tricks resolve with sparks; a finished match starts a new one). The backdrop is a 2D canvas; Low draws it once and runs no frame loop ("idle"). Measured 2026-10-18 (GPU ms above the draws-skipped floor, projected to the preset's floor level; CPU p90 on the RTX 5090 run):
+
+Desktop 1920×1080:
+
+```
+PASS low       GPU p50 0.00 / p90 0.00 ms (same page, draws skipped: 0.00 / 0.00) on level 2 → at level 0: typical 0.00 (≤ 12), slow 0.00 (≤ 14)  CPU p90 0.00 ms (≤ 6)  [idle: renders only on change] [no GPU timer: CPU only] frames 0/0
+PASS balanced  GPU p50 0.00 / p90 4.31 ms (same page, draws skipped: 2.77 / 4.37) on level 2 → at level 4: typical 0.00 (≤ 12), slow 0.00 (≤ 14)  CPU p90 0.40 ms (≤ 6)  frames 468/472
+PASS high      GPU p50 8.56 / p90 10.28 ms (same page, draws skipped: 0.00 / 4.38) on level 2 → at level 10: typical 1.63 (≤ 12), slow 1.13 (≤ 14)  CPU p90 0.70 ms (≤ 6)  frames 480/474
+PASS ultra     GPU p50 2.78 / p90 4.85 ms (same page, draws skipped: 0.00 / 4.90) on level 2 → at level 17: typical 0.12 (≤ 12), slow 0.00 (≤ 14)  CPU p90 0.70 ms (≤ 6)  frames 480/473
+```
+
+Phone 390×844 at DPR 3 (`--mobile --presets low,balanced`):
+
+```
+PASS low       GPU p50 0.00 / p90 0.00 ms (same page, draws skipped: 0.00 / 0.00) on level 2 → at level 0: typical 0.00 (≤ 12), slow 0.00 (≤ 14)  CPU p90 0.00 ms (≤ 6)  [idle: renders only on change] [no GPU timer: CPU only] frames 0/0
+PASS balanced  GPU p50 0.19 / p90 10.65 ms (same page, draws skipped: 0.00 / 1.00) on level 2 → at level 4: typical 0.12 (≤ 12), slow 6.38 (≤ 14)  CPU p90 0.40 ms (≤ 6)  frames 428/448
+```
+
+Files: `gpu-level.js` (shared StarHermit hardware-level module), `gfx.js` (pure quality model: presets, categories, hardware-level `detectLevel` / `presetForLevel` / `detectPreset`, per-preset `BUDGETS` / `budgetFor`, `resolve`, `choosePreset`, `presetTier`, `describe`), `fx.js` (sky/spark canvases, CSS hooks, adaptive resolution, persistence), `gfx-panel.js` (Graphics section + strings), `tests/gfx.test.js` (unit tests; the e2e suite drives the panel on desktop and mobile).
 
 ### Three.js scene design
 

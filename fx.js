@@ -14,6 +14,7 @@ window.Fx = (() => {
   let saved = {};
   let detected = 'balanced';
   let gpuName = '';
+  let gpuLevel = null;
   let resolved = null;
   let unavailable = false;       // true when the effects canvas could not be built
   let adaptiveScale = 1;
@@ -43,22 +44,31 @@ window.Fx = (() => {
     try { window.localStorage.setItem(STORE_KEY, JSON.stringify(saved)); } catch (_e) { /* session only */ }
   }
 
+  // StarHermit hardware level (gpu-level.js): renderer string + device facts
+  // (cores, memory, screen, touch). No WebGL at all rates level 0 (Low).
   function detectGpu() {
-    let noGl = false;
-    try {
-      const c = document.createElement('canvas');
-      const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
-      if (!gl) noGl = true;
-      else {
-        const ext = gl.getExtension('WEBGL_debug_renderer_info');
-        gpuName = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER) || '');
-        const lose = gl.getExtension('WEBGL_lose_context');
-        if (lose) lose.loseContext();
-      }
-    } catch (_e) { noGl = true; }
-    const touch = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
-      /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
-    detected = G.detectPreset(gpuName, { touch: touch, noGl: noGl });
+    const GPU = window.StarHermitGpu;
+    let sys = null;
+    try { sys = GPU ? GPU.detectSystem() : null; } catch (_e) { sys = null; }
+    if (!sys) {
+      sys = { webgl: false, mobile: !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches) };
+      try {
+        const c = document.createElement('canvas');
+        const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+        if (gl) {
+          sys.webgl = sys.webgl2 = true;
+          const ext = gl.getExtension('WEBGL_debug_renderer_info');
+          sys.gpu = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER) || '');
+          const lose = gl.getExtension('WEBGL_lose_context');
+          if (lose) lose.loseContext();
+        }
+      } catch (_e) { /* no WebGL */ }
+    }
+    if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '')) sys.mobile = true;
+    gpuName = sys.gpu || '';
+    gpuLevel = G.detectLevel(gpuName, Object.assign({}, sys, { gpu: undefined }));
+    if (sys.webgl === false) gpuLevel = 0;
+    detected = G.presetForLevel(gpuLevel);
   }
 
   function reducedMotion() { return !!(reducedMq && reducedMq.matches); }
@@ -108,7 +118,10 @@ window.Fx = (() => {
         warm: rnd() < 0.25,
       });
     }
-    const moteCount = resolved.particles === 'high' ? 46 : 0;
+    // the brightest stars get bloom halos, up to the budget's count
+    let halos = resolved.budget.halos;
+    for (let i = 0; i < stars.length && halos > 0; i++) if (stars[i].r > 1) { stars[i].halo = true; halos--; }
+    const moteCount = resolved.particles === 'high' ? resolved.budget.motes : 0;
     motes = [];
     for (let i = 0; i < moteCount; i++) {
       motes.push({ x: rnd(), y: rnd(), v: 0.004 + rnd() * 0.01, ph: rnd() * 6.28, r: 0.6 + rnd() * 1.2 });
@@ -212,7 +225,7 @@ window.Fx = (() => {
       const size = s.r * 5.5;
       x.globalAlpha = a;
       x.drawImage(starSprite, sx - size / 2, sy - size / 2, size, size);
-      if (r.bloom === 'on' && s.r > 1) {
+      if (r.bloom === 'on' && s.halo) {
         const hs = s.r * 14;
         x.globalAlpha = a * (s.warm ? 0.5 : 0.4);
         x.drawImage(haloSprite, sx - hs / 2, sy - hs / 2, hs, hs);
@@ -326,7 +339,8 @@ window.Fx = (() => {
     if (unavailable || !sky) return;
     cssW = window.innerWidth; cssH = window.innerHeight;
     const dpr = window.devicePixelRatio || 1;
-    ratio = Math.min(dpr, resolved.dprCap) * resolved.scale * (resolved.adaptive ? adaptiveScale : 1);
+    // the backdrop is soft gradients and points: drawn at the budget's share of the pixel ratio
+    ratio = Math.min(dpr, resolved.dprCap) * resolved.scale * resolved.budget.skyRes * (resolved.adaptive ? adaptiveScale : 1);
     ratio = G.clamp(ratio, 0.3, 4);
     sky.width = Math.max(1, Math.round(cssW * ratio));
     sky.height = Math.max(1, Math.round(cssH * ratio));
@@ -390,7 +404,7 @@ window.Fx = (() => {
   }
 
   function apply() {
-    resolved = G.resolve(saved, detected);
+    resolved = G.resolve(saved, detected, gpuLevel);
     applyCss();
     stop();
     resize();
@@ -435,14 +449,16 @@ window.Fx = (() => {
     if (seenTricks.size > 200) seenTricks.clear();
     const r = effective();
     if (r.particles === 'off') return;
-    window.requestAnimationFrame(() => burstAt(el, r.particles === 'high' ? 36 : 16, ourTeam ? GOLD : SILVER));
+    const n = resolved.budget.sparks;
+    window.requestAnimationFrame(() => burstAt(el, r.particles === 'high' ? n : Math.round(n * 0.45), ourTeam ? GOLD : SILVER));
   }
 
   function matchOver(weWon) {
     const r = effective();
     if (r.particles === 'off') return;
     const target = document.querySelector('.table-panel');
-    burstAt(target, r.particles === 'high' ? 140 : 60, weWon ? GOLD : SILVER);
+    const n = resolved.budget.finale;
+    burstAt(target, r.particles === 'high' ? n : Math.round(n * 0.45), weWon ? GOLD : SILVER);
   }
 
   /* --- panel API --- */
@@ -450,6 +466,7 @@ window.Fx = (() => {
   function info() {
     return {
       gpu: gpuName,
+      level: gpuLevel,
       detected: detected,
       saved: Object.assign({}, saved),
       resolved: effective(), // what is actually drawn (reduced motion stills sky + sparks)

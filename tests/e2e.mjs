@@ -270,6 +270,7 @@ async function graphicsPass(page, name) {
   if (!/deep shadows/.test(summary) || /glow/.test(summary) || !/\d+×\d+ px/.test(summary)) {
     throw new Error(`${name}: unexpected graphics summary "${summary}"`);
   }
+  if (!/ · Level 0 · /.test(summary)) throw new Error(`${name}: summary lacks the hardware level: "${summary}"`);
   await page.screenshot({ path: SHOT('graphics', name) });
   await closeSettings();
 
