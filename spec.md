@@ -94,6 +94,7 @@ The Three.js canvas fills the game region but is never the only UI. Menus, text,
 
 - Pointer/touch: raycast only against explicit interaction layers; use pointer capture for drags; cancel safely on lost capture.
 - Touch: distinguish tap, drag, and camera gesture by distance/time thresholds; never require multi-touch for core play.
+- Your hand keeps one button per card, updated in place as the AI seats play (never rebuilt), so a press on a card always ends in its click, including one held from East's play into your turn.
 - Keyboard: directional navigation among legal targets, confirm, cancel, pause, undo/hint where valid, and camera reset.
 - Gamepad: focus navigation, primary/secondary actions, pause, and remappable axes/buttons.
 - Prevent accidental double commits with action identifiers, not arbitrary long debounce timers. Provide visible drag origin, target preview, and invalid-action explanation.

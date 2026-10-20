@@ -130,16 +130,30 @@ function renderTrick(relabelOnly) {
   lastTrickLen = rs ? rs.trick.length : 0;
 }
 
+/* Your cards are kept and updated in place, one button per card: the hand
+ * re-renders on every AI step, and a card rebuilt between press and release
+ * would lose the click. */
 function renderPlayerHand() {
   const area = $('card-area');
-  area.innerHTML = '';
   const rs = match && match.roundState;
-  if (!rs) return;
+  if (!rs) { area.innerHTML = ''; return; }
   const hand = rs.hands[HUMAN];
   const legal = rs.phase === 'play' ? window.Rules.legalPlays(match, HUMAN) : [];
+  const inHand = new Set(hand.map(cardText));
+  const kept = new Map();
+  [...area.children].forEach((b) => {
+    if (inHand.has(b.dataset.card) && !kept.has(b.dataset.card)) kept.set(b.dataset.card, b);
+    else b.remove(); // gone cards leave first, so the cards that stay are never moved
+  });
   hand.forEach((card, idx) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
+    let btn = kept.get(cardText(card));
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.card = cardText(card);
+      btn.addEventListener('click', () => onCardClick(Number(btn.dataset.idx)));
+    }
+    btn.dataset.idx = String(idx);
     btn.className = 'card face hand-card' + (card.suit === 'H' || card.suit === 'D' ? ' red' : '');
     btn.textContent = cardText(card);
     btn.dataset.corner = cardText(card);
@@ -155,8 +169,7 @@ function renderPlayerHand() {
         }
       }
     }
-    btn.addEventListener('click', () => onCardClick(idx));
-    area.appendChild(btn);
+    if (area.children[idx] !== btn) area.insertBefore(btn, area.children[idx] || null);
   });
 }
 
