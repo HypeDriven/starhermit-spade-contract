@@ -1,0 +1,23 @@
+# The phone layout (390 × 844 at DPR 3) by touch: New Game, a bid, the first
+# lead (South leads, so any card is legal), How to play and its Close.
+# viewport 390x844@3
+until 600 Press New Game
+frames 20
+touch =New Game
+until 120 Your bid
+frames 10
+save phone-bid
+touch =Bid 1
+until 600 Your turn
+frames 20
+touch 12% 87.5%
+until 200 12 cards
+frames 20
+save phone-play
+touch =Help
+until 120 How to play
+frames 10
+save phone-help
+touch =Close
+frames 20
+expect South (You)

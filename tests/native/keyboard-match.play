@@ -1,0 +1,17 @@
+# A whole match by keys at the desktop size: New Game, then Enter on each turn
+# (the focus starts on Pass (0) when you bid and on your first playable card
+# when you play) until the five rounds end with the final score.
+# viewport 1280x800@1
+until 600 Press New Game
+frames 20
+click =New Game
+until 120 Your bid
+frames 10
+repeat 30000 until Final — Team A
+  key Enter 1
+  frames 20
+end
+frames 60
+expect Results
+expect Round 5 / 5
+save desk-results

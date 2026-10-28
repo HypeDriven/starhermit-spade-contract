@@ -1,0 +1,16 @@
+# Short landscape (844 × 390): New Game, a bid by click, then the first trick by keys.
+# viewport 844x390@3
+until 600 Press New Game
+frames 20
+touch =New Game
+until 120 Your bid
+frames 10
+save land-bid
+touch =Pass (0)
+until 600 Your turn
+frames 20
+save land-play
+touch 53.6% 58%
+until 200 12 cards
+frames 20
+save land-trick

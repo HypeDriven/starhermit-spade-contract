@@ -1,0 +1,18 @@
+# The desktop layout by mouse and keys: New Game, Bid 2 by click, the first
+# lead by Enter (the focus starts on your first playable card).
+# viewport 1280x800@1
+until 600 Press New Game
+frames 30
+save desk-welcome
+click =New Game
+until 120 Your bid
+frames 10
+save desk-bid
+click =Bid 2
+until 600 Your turn
+frames 20
+save desk-play
+key Enter 1
+until 200 12 cards
+frames 80
+save desk-trick
