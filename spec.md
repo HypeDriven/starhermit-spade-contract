@@ -1,7 +1,7 @@
 # Spade Contract — specification
 
 Spade Contract is a Spades-style team trick-taking card game for one player and three AI seats, set in an
-observatory card room. It is a StarHermit engine script game (TypeScript on the host API, engine 1.20.1,
+observatory card room. It is a StarHermit engine script game (TypeScript on the host API, engine 1.22.0,
 `engine.minor=20`): one package played natively by the StarHermit client and in browsers by the engine's
 web runtime (the loader `index.html` that `npm run package` writes).
 
