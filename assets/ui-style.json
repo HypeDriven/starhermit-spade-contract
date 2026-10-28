@@ -1,0 +1,412 @@
+{
+  "styles": {
+    ".topbar": {
+      "background": "#0a141c99",
+      "border": {
+        "width": {
+          "bottom": 1
+        },
+        "color": {
+          "bottom": "$line"
+        },
+        "style": "solid"
+      },
+      "radius": 0,
+      "padding": {
+        "top": 8,
+        "end": 16,
+        "bottom": 10,
+        "start": 16
+      }
+    },
+    ".topbar-detailed": {
+      "background": {
+        "type": "linear",
+        "stops": ["#0e1a24d1", "#081017b3"]
+      },
+      "border": {
+        "width": {
+          "bottom": 1
+        },
+        "color": {
+          "bottom": "#e3b34147"
+        },
+        "style": "solid"
+      },
+      "radius": 0,
+      "padding": {
+        "top": 8,
+        "end": 16,
+        "bottom": 10,
+        "start": 16
+      }
+    },
+    ".game-title": {
+      "text": {
+        "color": "$accent",
+        "size": 24,
+        "weight": "700",
+        "letterSpacing": "0.04em"
+      }
+    },
+    ".game-title-glow": {
+      "text": {
+        "color": "$accent",
+        "size": 24,
+        "weight": "700",
+        "letterSpacing": "0.04em",
+        "shadow": {
+          "blur": 14,
+          "color": "#e3b34173"
+        }
+      }
+    },
+    ".round-info": {
+      "text": {
+        "color": "$ink-dim",
+        "size": 15.2
+      }
+    },
+    ".player-chip": {
+      "background": "$panel",
+      "border": {
+        "width": 1,
+        "color": "$line",
+        "style": "solid"
+      },
+      "radius": 999,
+      "padding": {
+        "top": 3,
+        "end": 12,
+        "bottom": 3,
+        "start": 12
+      }
+    },
+    ".player-name": {
+      "text": {
+        "color": "$ink",
+        "size": 13.6,
+        "weight": "600"
+      }
+    },
+    ".sync-status": {
+      "text": {
+        "color": "$ink-dim",
+        "size": 13.6
+      }
+    },
+    ".btn": {
+      "background": "$panel",
+      "border": {
+        "width": 1,
+        "color": "$line",
+        "style": "solid"
+      },
+      "radius": 8,
+      "padding": {
+        "top": 8,
+        "end": 14,
+        "bottom": 8,
+        "start": 14
+      },
+      "minWidth": 44,
+      "minHeight": 44,
+      "text": {
+        "color": "$ink",
+        "size": 15.2
+      },
+      "hovered": {
+        "background": "#22394b"
+      },
+      "focusVisible": {
+        "focusRing": {
+          "width": 2,
+          "color": "$accent",
+          "offset": 2
+        }
+      },
+      "pressed": {
+        "background": "#13222e"
+      },
+      "disabled": {
+        "opacity": 0.5
+      }
+    },
+    ".btn-primary": {
+      "background": "$accent",
+      "border": {
+        "width": 1,
+        "color": "#c4931f",
+        "style": "solid"
+      },
+      "radius": 8,
+      "padding": {
+        "top": 8,
+        "end": 14,
+        "bottom": 8,
+        "start": 14
+      },
+      "minWidth": 44,
+      "minHeight": 44,
+      "text": {
+        "color": "$accent-ink",
+        "size": 15.2,
+        "weight": "600"
+      },
+      "hovered": {
+        "background": "#ecc25e"
+      },
+      "focusVisible": {
+        "focusRing": {
+          "width": 2,
+          "color": "$accent",
+          "offset": 2
+        }
+      },
+      "pressed": {
+        "background": "#d2a233"
+      }
+    },
+    ".btn-primary-glow": {
+      "background": "$accent",
+      "border": {
+        "width": 1,
+        "color": "#c4931f",
+        "style": "solid"
+      },
+      "radius": 8,
+      "shadow": {
+        "blur": 16,
+        "color": "#e3b34147"
+      },
+      "padding": {
+        "top": 8,
+        "end": 14,
+        "bottom": 8,
+        "start": 14
+      },
+      "minWidth": 44,
+      "minHeight": 44,
+      "text": {
+        "color": "$accent-ink",
+        "size": 15.2,
+        "weight": "600"
+      },
+      "hovered": {
+        "background": "#ecc25e"
+      },
+      "focusVisible": {
+        "focusRing": {
+          "width": 2,
+          "color": "$accent",
+          "offset": 2
+        }
+      },
+      "pressed": {
+        "background": "#d2a233"
+      }
+    },
+    ".panel": {
+      "background": "$panel",
+      "border": {
+        "width": 1,
+        "color": "$line",
+        "style": "solid"
+      },
+      "radius": 12,
+      "padding": 12
+    },
+    ".panel-detailed": {
+      "background": {
+        "type": "linear",
+        "stops": ["#1f3344f2", "#14232ff2"]
+      },
+      "border": {
+        "width": 1,
+        "color": "#33506a",
+        "style": "solid"
+      },
+      "radius": 12,
+      "padding": 12
+    },
+    ".panel-detailed-shadow": {
+      "background": {
+        "type": "linear",
+        "stops": ["#1f3344f2", "#14232ff2"]
+      },
+      "border": {
+        "width": 1,
+        "color": "#33506a",
+        "style": "solid"
+      },
+      "radius": 12,
+      "shadow": {
+        "y": 12,
+        "blur": 34,
+        "color": "#00000066"
+      },
+      "padding": 12
+    },
+    ".panel-shadow": {
+      "background": "$panel",
+      "border": {
+        "width": 1,
+        "color": "$line",
+        "style": "solid"
+      },
+      "radius": 12,
+      "shadow": {
+        "y": 12,
+        "blur": 34,
+        "color": "#00000066"
+      },
+      "padding": 12
+    },
+    ".score-label": {
+      "text": {
+        "color": "$ink-dim",
+        "size": 14.4
+      }
+    },
+    ".score-label-small": {
+      "text": {
+        "color": "$ink-dim",
+        "size": 12.5
+      }
+    },
+    ".score-value": {
+      "text": {
+        "color": "$accent",
+        "size": 22.4,
+        "weight": "700"
+      }
+    },
+    ".score-value-glow": {
+      "text": {
+        "color": "$accent",
+        "size": 22.4,
+        "weight": "700",
+        "shadow": {
+          "blur": 10,
+          "color": "#e3b34166"
+        }
+      }
+    },
+    ".panel-title": {
+      "text": {
+        "color": "$accent",
+        "size": 16.8,
+        "weight": "700"
+      }
+    },
+    ".status-text": {
+      "text": {
+        "color": "$ink-dim",
+        "size": 14.7
+      }
+    },
+    ".trick-item": {
+      "text": {
+        "color": "$ink-dim",
+        "size": 13.6
+      }
+    },
+    ".results-box": {
+      "background": "$panel-2",
+      "border": {
+        "width": 1,
+        "color": "$line",
+        "style": "solid"
+      },
+      "radius": 10,
+      "padding": 10
+    },
+    ".winner-line": {
+      "text": {
+        "color": "$accent",
+        "size": 14.7,
+        "weight": "600"
+      }
+    },
+    ".dialog-panel": {
+      "background": "$panel",
+      "border": {
+        "width": 1,
+        "color": "$line",
+        "style": "solid"
+      },
+      "radius": 12,
+      "padding": 0
+    },
+    ".dialog-head": {
+      "border": {
+        "width": {
+          "bottom": 1
+        },
+        "color": {
+          "bottom": "$line"
+        },
+        "style": "solid"
+      },
+      "radius": 0,
+      "padding": {
+        "top": 10,
+        "end": 14,
+        "bottom": 10,
+        "start": 14
+      }
+    },
+    ".dialog-title": {
+      "text": {
+        "color": "$accent",
+        "size": 17.6,
+        "weight": "700"
+      }
+    },
+    ".dialog-text": {
+      "text": {
+        "color": "$ink",
+        "size": 16
+      }
+    },
+    ".sh-toast": {
+      "background": "$panel",
+      "border": {
+        "width": 1,
+        "color": "$line",
+        "style": "solid"
+      },
+      "radius": 10,
+      "shadow": {
+        "y": 6,
+        "blur": 20,
+        "color": "#00000059"
+      },
+      "padding": {
+        "top": 10,
+        "end": 16,
+        "bottom": 10,
+        "start": 16
+      }
+    },
+    ".toast-text": {
+      "text": {
+        "color": "$ink",
+        "size": 14.4
+      }
+    }
+  },
+  "animations": {},
+  "tokens": {
+    "accent": "#e3b341",
+    "accent-ink": "#20160a",
+    "bg": "#101c26",
+    "ink": "#e8eef4",
+    "ink-dim": "#9fb2c2",
+    "line": "#2c4356",
+    "panel": "#182a38",
+    "panel-2": "#13222e"
+  },
+  "layouts": {},
+  "dropped": []
+}

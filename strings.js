@@ -69,11 +69,7 @@
     ['Make your contract: +10 per trick bid, +1 per extra trick. Miss it: −10 per trick bid.', 'Si cumples el contrato: +10 por baza apostada, +1 por baza extra. Si fallas: −10 por baza apostada.', 'Kontrakt erfüllt: +10 pro gebotenem Stich, +1 pro Extrastich. Verfehlt: −10 pro gebotenem Stich.', 'Contrat rempli : +10 par pli annoncé, +1 par pli supplémentaire. Contrat chuté : −10 par pli annoncé.', 'Cumpra o contrato: +10 por vaza apostada, +1 por vaza extra. Se falhar: −10 por vaza apostada.', 'Contratto rispettato: +10 per presa dichiarata, +1 per presa in più. Mancato: −10 per presa dichiarata.'],
     ['After five rounds the team with the higher score wins.', 'Tras cinco rondas gana el equipo con más puntos.', 'Nach fünf Runden gewinnt das Team mit der höheren Punktzahl.', 'Après cinq manches, l’équipe qui a le plus de points gagne.', 'Depois de cinco rodadas, vence o time com mais pontos.', 'Dopo cinque round vince la squadra con il punteggio più alto.'],
     ['How to play', 'Cómo jugar', 'So wird gespielt', 'Comment jouer', 'Como jogar', 'Come si gioca'],
-    ['Mute sound effects', 'Silenciar efectos de sonido', 'Soundeffekte stumm', 'Couper les effets sonores', 'Silenciar efeitos sonoros', 'Disattiva gli effetti sonori'],
-    ['Volume', 'Volumen', 'Lautstärke', 'Volume', 'Volume', 'Volume'],
-    ['Effects volume', 'Volumen de efectos', 'Effektlautstärke', 'Volume des effets', 'Volume dos efeitos', 'Volume effetti'],
     // ---- account chip
-    ['Player {id}', 'Jugador {id}', 'Spieler {id}', 'Joueur {id}', 'Jogador {id}', 'Giocatore {id}'],
     ['synced', 'sincronizado', 'synchronisiert', 'synchronisé', 'sincronizado', 'sincronizzato'],
     ['saving…', 'guardando…', 'wird gespeichert …', 'enregistrement…', 'salvando…', 'salvataggio…'],
     ['offline', 'sin conexión', 'offline', 'hors ligne', 'offline', 'offline']
@@ -102,4 +98,4 @@
   };
 
   root.SC_STRINGS = T;
-})(typeof self !== 'undefined' ? self : this);
+})(globalThis);
