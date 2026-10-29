@@ -4,7 +4,7 @@
     "cover.jpg": {"sha256": "aeb0976fb4215bc7b8253939dad20ccbcbb88f6beff79a207a7722fc02485851", "size": 252214},
     "i18n.js": {"sha256": "4f6f4bf8ab85fd55665121cfc10336d33f59f667fb29388c992860c0911cce0a", "size": 1757},
     "icon.png": {"sha256": "e1ab742a3b0153a364b912838d1cb08edf1a91fb6a2f75eddc0b6dea2c43c5c0", "size": 9636},
-    "index.html": {"sha256": "63cd118e9b8092a7ac65e26060f9e099e4b327908f033991ad0c3633a9c0c70e", "size": 1764},
+    "index.html": {"sha256": "6bcca7ad63a0247b54e0d001ef851713a8c68cd052bb2b5a7ef076cbe0ca7351", "size": 1764},
     "native/audio.ts": {"sha256": "5938c4b0799cd08e787b5ca89c19c434fc131b40ba86cc0b99af40e297818c48", "size": 2559},
     "native/classic.ts": {"sha256": "3dd929655ff96388c9a168255a8d9c1b4cba414742e74213d738a440ea95ce37", "size": 2931},
     "native/fx.ts": {"sha256": "89bfc432e4d899e53536a0547905f3ea1b36228b93392ad16f0a2571f4133706", "size": 9956},
@@ -36,7 +36,7 @@
     "sfx/ui-click.opus": {"sha256": "91ce91252861e2eec5f6f15288d61c637e49d735f496c39602f506b19c0b34a5", "size": 11610},
     "sfx/ui-open.opus": {"sha256": "d12dc7e62335d84b650e449fdec5bc72877dcbdec04ee0d89ee0536068ad5b9c", "size": 11630},
     "sh-strings.js": {"sha256": "3e97464afbf7089ef28c5a2fb59a9adb35309275a737a0baea2a96d3d9e0a0e5", "size": 3989},
-    "starhermit.txt": {"sha256": "449dbf4bd88b9517156da225b5b9278842639f849aab4c8b5eba0ef8c09be31d", "size": 1173},
+    "starhermit.txt": {"sha256": "ec97bb58298dc0a0c264b21b28d360563b2f07789a53410506ba7388c962d677", "size": 1173},
     "store.js": {"sha256": "5c4bd5e1d7200ebbf5cf880646ee7a53e18743a9dc9bdf679088bbdb587c93ad", "size": 5533},
     "strings.js": {"sha256": "d040b7fc806a1ce882a73485191581aa83bdc43edf7652184e957ffa3486e475", "size": 13644}
   },
