@@ -27,7 +27,6 @@ import * as table from "./table.ts";
 export const view = {
   help: false,
   helpOpened: -1,
-  toast: null as { text: () => string; until: number } | null,
 };
 let look: Look | null = null;
 export function setLook(l: Look): void { look = l; }
@@ -37,10 +36,9 @@ type Mode = "wide" | "compact" | "land";
 interface Layout { W: number; H: number; k: number; mode: Mode; narrow: boolean; cw: number; gap: number }
 const clamp = (v: number, a: number, b: number): number => Math.min(b, Math.max(a, v));
 function layoutNow(): Layout {
-  const f = frame();
-  const k = ui.preferences().scale;
-  const sa = f.safeArea;
-  const W = Math.max(1, (f.width - sa.left - sa.right) / k), H = Math.max(1, (f.height - sa.top - sa.bottom) / k);
+  const v = ui.viewport!();
+  const k = v.scale;
+  const W = Math.max(1, v.width), H = Math.max(1, v.height);
   const mode: Mode = H <= 500 && W > H ? "land" : W >= 1024 ? "wide" : "compact";
   const cw = mode === "land" ? 40 : mode === "wide" ? clamp(W * 0.1, 38, 54) : clamp(W * 0.095, 34, 48);
   const narrow = W <= 480;
@@ -94,15 +92,14 @@ function btnW(b: Btn, L: Layout): number {
 export function drawScreens(): void {
   const L = layoutNow();
   fx.drawSky();
-  const sa = frame().safeArea;
-  ui.place("page", { anchor: "top-start", x: sa.left / L.k, y: sa.top / L.k }, () => {
+  const v = ui.viewport!();
+  ui.place("page", { anchor: "top-start", x: v.x, y: v.y }, () => {
     ui.column("app", () => {
       topbar(L);
       content(L);
     }, { width: L.W, height: L.H, spacing: 0 });
   });
   helpDialog(L);
-  toast(L);
   // the sparks over everything (a widget that takes no pointer)
   ui.place("fx-sparks", { anchor: "top-start" }, () => { ui.widget("", { role: "none", size: { width: 0, height: 0 }, draw: () => fx.drawSparks() }); });
   autoFocus(L);
@@ -142,10 +139,10 @@ function copyInvite(): void {
   audio.play("uiClick");
   const link = platform.inviteLink();
   if (!link) return;
-  if (platform.copy(link)) showToast(() => S("copied"));
-  else showToast(() => `${S("copyFailed")}: ${link}`);
+  if (platform.copy(link)) showToast(() => S("inviteCopied"));
+  else showToast(() => `${S("inviteFailed")}: ${link}`);
 }
-export function showToast(text: () => string): void { view.toast = { text, until: frame().time + 3.2 }; }
+export function showToast(text: () => string): void { ui.toast!(text(), { duration: 3.2, style: ["sh-toast", "toast-text"], dismissible: false }); }
 
 function syncText(): string {
   const s = platform.syncState();
@@ -459,15 +456,4 @@ function helpDialog(L: Layout): void {
     }, { width: w, spacing: 0 });
   });
   if (!stillOpen && frame().frame > view.helpOpened) pressed.push(closeHelp);
-}
-
-// ------------------------------------------------------------------ toast
-function toast(L: Layout): void {
-  const t = view.toast;
-  if (!t) return;
-  if (t.until < frame().time) { view.toast = null; return; }
-  const w = Math.min(L.W * 0.92, 520);
-  ui.place("toast", { anchor: "bottom", y: 16 }, () => {
-    ui.style("sh-toast").column("toast-box", () => { para(t.text(), w - 34, "toast-text", "toast-text"); }, { align: "center" });
-  });
 }

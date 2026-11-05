@@ -8,7 +8,7 @@
 // announcements, and the lifecycle (a hidden window flushes the save, as
 // pagehide / visibilitychange did).
 import "./classic.ts";
-import { frame, onFixedUpdate, onPreferencesChange, onRender, onStart, onSuspend, onUpdate, setFixedRate } from "starhermit:engine";
+import { frame, levelSettings, onFixedUpdate, onPreferencesChange, onRender, onStart, onSuspend, onUpdate, setFixedRate } from "starhermit:engine";
 import { onAction } from "starhermit:input";
 import * as ui from "starhermit:ui";
 import { onSessionEnded } from "starhermit:platform";
@@ -45,12 +45,12 @@ onAction((e) => {
 // ------------------------------------------------------------------ the look
 let lookKey = "";
 function applyLook(): void {
-  const f = frame();
+  const level = frame().level;
   const reduced = ui.preferences().reducedMotion;
-  const k = `${f.quality}:${f.levelIndex}:${reduced}`;
+  const k = `${level}:${reduced}`;
   if (k === lookKey) return;
   lookKey = k;
-  const look = lookFor(f.quality, f.levelIndex, reduced);
+  const look = lookFor(levelSettings(level), reduced);
   fx.setLook(look);
   table.setLook(look);
   setScreensLook(look);
@@ -74,10 +74,7 @@ onSessionEnded(() => showToast(() => S("signedOut"))); // keep playing locally
 onSuspend(() => platform.flush());
 
 onFixedUpdate(() => game.step());
-onUpdate(() => {
-  applyLook();
-  audio.update();
-});
+onUpdate(() => applyLook());
 onRender(() => {
   drawScreens();
   if (pendingAnnounce.length) {

@@ -1,0 +1,15 @@
+# Graphics-level bench: a match to the first lead (the AI plays the trick and the sparks fly), 600 frames measured.
+# viewport 1280x800@1
+until 600 Press New Game
+frames 30
+click =New Game
+until 120 Your bid
+frames 10
+click =Bid 2
+until 600 Your turn
+frames 20
+frames 120
+measure start
+key Enter 1
+frames 600
+measure stop

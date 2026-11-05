@@ -1,14 +1,15 @@
 // The look per graphics level: the browser build's four presets and budgets
 // (gfx.js TABLE / BUDGETS, each tuned to hold 60 FPS on the weakest GPU its
 // Auto gave it) keyed by the runtime's quality tier (frame().quality), with
-// the star, mote and spark counts scaled within the tier by the level
-// (frame().levelIndex, at most 2×, stars capped at 840 and motes at 128), as
-// the browser build scaled them by its hardware level. The runtime owns the
-// rest of what the old Graphics section did: Auto and the level choice,
+// the star, mote and spark counts scaled within the tier by the level's
+// particle budget (levelSettings().particles, at most 2×, stars capped at 840
+// and motes at 128). The game is drawn entirely with starhermit:draw, so its
+// shadows, glow and grade are its own art, not the renderer's. The runtime owns
+// the rest of what the old Graphics section did: Auto and the level choice,
 // render scale and the pixel-ratio cap, adaptive resolution, the frame-rate
 // limit and its readout. The old section's per-effect overrides are not
 // offered (the runtime's Options choose a level).
-import type { QualityTier } from "starhermit:engine";
+import { levelSettings, type GraphicsLevel, type LevelSettings, type QualityTier } from "starhermit:engine";
 
 export interface Budget {
   /** Stars on the backdrop. */
@@ -51,15 +52,14 @@ const BUDGETS: Record<QualityTier, Budget> = {
   high: { stars: 320, halos: 40, motes: 46, sparks: 36, finale: 140 },
   ultra: { stars: 420, halos: 64, motes: 64, sparks: 48, finale: 180 },
 };
-/** The first level index of each tier. */
-const TIER_FLOOR: Record<QualityTier, number> = { low: 0, balanced: 2, high: 4, ultra: 7 };
+const ANCHOR: Record<QualityTier, GraphicsLevel> = { low: "quantum", balanced: "molecular", high: "terrestrial", ultra: "galactic" };
 const STAR_MAX = 840, MOTE_MAX = 128;
 
-/** The look for a quality tier at a level index (0 … 9); reduced motion stills the sky and the sparks. */
-export function lookFor(preset: QualityTier, levelIndex: number, reducedMotion: boolean): Look {
+/** The look for a graphics level's settings; reduced motion stills the sky and the sparks. */
+export function lookFor(s: LevelSettings, reducedMotion: boolean): Look {
+  const preset = s.quality;
   const b = { ...BUDGETS[preset] };
-  // Levels are about 1.64× apart in GPU throughput: counts grow with the level above the tier's first, at most 2× (gfx.js budgetFor).
-  const k = Math.min(2, Math.pow(1.64, Math.max(0, levelIndex - TIER_FLOOR[preset])));
+  const k = Math.min(2, s.particles / levelSettings(ANCHOR[preset]).particles);
   b.stars = Math.min(STAR_MAX, Math.round(b.stars * k));
   b.motes = Math.min(MOTE_MAX, Math.round(b.motes * k));
   b.sparks = Math.round(b.sparks * k);

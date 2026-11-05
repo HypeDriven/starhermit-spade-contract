@@ -1,12 +1,10 @@
 // The pure scripts, shared with the node tests and evaluated as classic
 // scripts (their globals land on globalThis): the rules (rules.js: deal,
 // bidding, legal plays, tricks, scoring, the AI), the save logic (store.js:
-// snapshot checks, the browser build's checksummed doc, the merge), the
-// string tables (strings.js through i18n.js) and the account strings
-// (sh-strings.js).
+// snapshot checks, the browser build's checksummed doc, the merge).
 import { loadClassic } from "starhermit:script";
 
-for (const f of ["rules.js", "store.js", "strings.js", "i18n.js", "sh-strings.js"]) loadClassic(f);
+for (const f of ["rules.js", "store.js"]) loadClassic(f);
 
 export type Suit = "S" | "H" | "D" | "C";
 export interface Card { suit: Suit; rank: string }
@@ -49,21 +47,8 @@ interface StoreApi {
   readForeign(text: string | null): { savedAt: string; match: Match | null } | null;
   canon(v: unknown): string;
 }
-interface I18nApi {
-  LOCALES: string[];
-  T(key: string, vars?: Record<string, string | number> | null): string;
-  setLocale(tag: string): void;
-  getLang(): string;
-}
-export interface AccountStrings {
-  signIn: string; invite: string; copied: string; copyFailed: string; signedOut: string;
-  lbPosting: string; lbRank: string; lbPosted: string; lbNotPosted: string;
-}
-
 const G = globalThis as unknown as {
-  Rules: RulesApi; SpadeStore: StoreApi; SCI18N: I18nApi; ShStrings: { strings(lang: string): AccountStrings };
+  Rules: RulesApi; SpadeStore: StoreApi;
 };
 export const Rules = G.Rules;
 export const Store = G.SpadeStore;
-export const I18n = G.SCI18N;
-export const ShStrings = G.ShStrings;

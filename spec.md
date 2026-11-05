@@ -57,7 +57,7 @@ finished trick (the winning card outlined, "X wins the trick."), 2.5 s on the ro
 ## Look per graphics tier (native/quality.ts, native/fx.ts)
 
 The browser build's four presets map onto the runtime's quality tiers (frame().quality), the counts scaled
-within a tier by frame().levelIndex (at most 2×):
+within a tier by the level's particle budget (at most 2×):
 
 | Tier | Shadows | Bloom | Grade | Particles | Sky | Detail |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -83,7 +83,7 @@ bidPass, trickWin, trickLose, spadeTrump, roundStart, roundEnd, gameWin, gameLos
 uiClick, uiOpen) on the effects bus, UI clicks on the interface bus. Volumes and mute are the runtime's
 Options. The old procedural fallbacks while a sample loads are not ported (a clip still loading is silent).
 
-## Localization (strings.js, i18n.js, sh-strings.js, native/i18n.ts)
+## Localization (assets/strings.json, native/i18n.ts; account strings: the engine's `starhermit.*`)
 
 Nine locales (en-US, en-GB, es-419, es-ES, de-DE, fr-FR, fr-CA, pt-BR, it-IT), English text as the key,
 following the runtime's interface language; a change shows on the next frame. Card ranks and suit glyphs
