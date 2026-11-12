@@ -1,3 +1,4 @@
+import { localizedDrawOptions as __l10nDrawOptions } from "./l10n/font.ts";
 // The card table and the cards (the browser build's .table-panel grid and
 // .card elements with their style.css looks) as starhermit:draw, drawn by
 // the table's widget in its rectangle: the felt (a gradient; with Detail
@@ -109,12 +110,12 @@ export function drawCard(card: Card, x: number, y: number, w: number, h: number,
   if (detailed) {
     draw.box(cx + 3 * k, cy + 3 * k, cw - 6 * k, ch - 6 * k, { radius: 4, opacity, border: { width: 1, color: isRed(card) ? "#b3243a24" : "#1a24301a" } });
     const cs = Math.max(7, o.cw * 0.17) * k * scale;
-    draw.text(cardText(card), cx + 3 * k, cy + 2 * k, { size: cs, weight: 700, color: withAlpha(ink, 0.75 * opacity) });
+    draw.text(cardText(card), cx + 3 * k, cy + 2 * k, __l10nDrawOptions({ size: cs, weight: 700, color: withAlpha(ink, 0.75 * opacity) }));
   }
   const size = o.cw * 0.36 * k * scale;
   const label = cardText(card);
-  const m = draw.measureText(label, { size, weight: 700, letterSpacing: -0.02 * size });
-  draw.text(label, cx + cw / 2, cy + ch / 2 - m.height / 2, { size, weight: 700, align: "center", letterSpacing: -0.02 * size, color: withAlpha(ink, opacity) });
+  const m = draw.measureText(label, __l10nDrawOptions({ size, weight: 700, letterSpacing: -0.02 * size }));
+  draw.text(label, cx + cw / 2, cy + ch / 2 - m.height / 2, __l10nDrawOptions({ size, weight: 700, align: "center", letterSpacing: -0.02 * size, color: withAlpha(ink, opacity) }));
   if (o.winner) draw.box(cx - 4 * k, cy - 4 * k, cw + 8 * k, ch + 8 * k, { radius: 10, border: { width: 3, color: ACCENT } });
   else if (o.lifted || o.focused) draw.box(cx - 2 * k, cy - 2 * k, cw + 4 * k, ch + 4 * k, { radius: 8, border: { width: 2, color: ACCENT } });
 }
@@ -232,16 +233,16 @@ function seat(s: number, cx: number, cy: number, k: number, hgt: number): void {
   const rs = state.match?.roundState ?? null;
   const name = seatLabel(s);
   const size = LABEL * k;
-  const tw = draw.measureText(name, { size, weight: 700 }).width;
+  const tw = draw.measureText(name, __l10nDrawOptions({ size, weight: 700 })).width;
   const lineH = LABEL * 1.45 * k;
   const count = rs ? (rs.phase === "bid" ? T("bidding") : T("{n} cards", { n: rs.hands[s]!.length })) : "";
   const top = cy - hgt / 2 + 4 * k;
   if (detailed) {
     draw.box(cx - tw / 2 - 10 * k, top, tw + 20 * k, lineH + 2 * k, { radius: 999, background: "#06161066", shadow: [{ spread: 1, color: "#e3b3414d", inset: true }] });
   }
-  const nh = draw.measureText(name, { size, weight: 700 }).height;
-  draw.text(name, cx, top + (lineH + 2 * k - nh) / 2, { size, weight: 700, align: "center", color: detailed ? "#eef6f1" : "#d7e6df" });
-  if (count) draw.text(count, cx, top + lineH + 4 * k, { size: COUNT * k, align: "center", color: "#a8c4b8" });
+  const nh = draw.measureText(name, __l10nDrawOptions({ size, weight: 700 })).height;
+  draw.text(name, cx, top + (lineH + 2 * k - nh) / 2, __l10nDrawOptions({ size, weight: 700, align: "center", color: detailed ? "#eef6f1" : "#d7e6df" }));
+  if (count) draw.text(count, cx, top + lineH + 4 * k, __l10nDrawOptions({ size: COUNT * k, align: "center", color: "#a8c4b8" }));
   targets.push({ text: count ? `${name}: ${count}` : name, rect: { x: cx - tw / 2, y: top, width: tw, height: lineH * 2 } });
 }
 

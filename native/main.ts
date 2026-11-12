@@ -1,3 +1,4 @@
+import { withLanguageRender as __l10nRender } from "./l10n/menu.ts";
 // Spade Contract on the StarHermit engine: the entry module (starhermit.txt
 // engine.entry), played natively by the StarHermit client and in browsers by
 // the engine's web runtime. The rules (rules.js) are the browser build's,
@@ -75,10 +76,14 @@ onSuspend(() => platform.flush());
 
 onFixedUpdate(() => game.step());
 onUpdate(() => applyLook());
-onRender(() => {
+onRender(__l10nRender(() => {
   drawScreens();
   if (pendingAnnounce.length) {
     try { ui.announce(pendingAnnounce.join(" ").slice(0, 500)); } catch { /* next frame */ }
     pendingAnnounce = [];
   }
-});
+}));
+
+// localization-runtime:menu
+import { installLanguageMenu as __installLanguageMenu } from "./l10n/menu.ts";
+__installLanguageMenu(false);

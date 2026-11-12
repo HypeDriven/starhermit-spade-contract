@@ -1,3 +1,6 @@
+import { localizedStyle as __l10nStyle } from "./l10n/font.ts";
+// localization-runtime:attached
+import { openLocalizedOptions as __l10nOptions } from "./l10n/menu.ts";
 // The browser build's page (index.html with style.css) as starhermit:ui,
 // built every frame: the top bar (title, round, the signed-in chip with the
 // avatar, name and sync state, Help, Settings, Sign in / Invite a friend,
@@ -11,7 +14,20 @@
 // scores and side panel on the right). Settings opens the runtime's Options
 // (sound, graphics, language, controls, accessibility), which replaced the
 // old Settings dialog and its Graphics section.
-import { frame, openMenu } from "starhermit:engine";
+// The browser build's page (index.html with style.css) as starhermit:ui,
+// built every frame: the top bar (title, round, the signed-in chip with the
+// avatar, name and sync state, Help, Settings, Sign in / Invite a friend,
+// New Game), the score panel, the card table (table.ts), the side panel
+// (phase, status, tricks taken, the results with the leaderboard line, the
+// bid buttons and your hand as card buttons), the How to play dialog and
+// the toast. The CSS breakpoints are layouts picked by the window's logical
+// size: wide (≥ 1024 px: three columns), compact (stacked: scores, table,
+// side panel; ≤ 480 px phones get a two-row top bar with full-width
+// buttons) and short landscape (≤ 500 px tall: the table on the left, the
+// scores and side panel on the right). Settings opens the runtime's Options
+// (sound, graphics, language, controls, accessibility), which replaced the
+// old Settings dialog and its Graphics section.
+import { frame } from "starhermit:engine";
 import * as draw from "starhermit:draw";
 import * as ui from "starhermit:ui";
 import { primaryPointer } from "starhermit:input";
@@ -55,8 +71,8 @@ function textW(text: string, style: string, kind?: "button"): number {
 }
 /** Text up to `width` wide: one label when it fits, else a paragraph. */
 function para(text: string, width: number, style: string, id: string): ui.Rect {
-  if (textW(text, style) <= width + 1) return ui.style(style).id(id).label(text);
-  return ui.style(style).id(id).paragraph(text, width);
+  if (textW(text, style) <= width + 1) return ui.style(__l10nStyle(style)).id(id).label(text);
+  return ui.style(__l10nStyle(style)).id(id).paragraph(text, width);
 }
 /** Items of known widths in rows no wider than `width` (CSS flex-wrap). */
 function wrapRows<Tt>(items: Tt[], width: (t: Tt) => number, max: number, gap: number): Tt[][] {
@@ -81,7 +97,7 @@ function button(b: Btn, L: Layout): void {
   if (b.width != null) Object.assign(size, { width: b.width, text: { align: "center" } });
   if (L.mode === "land") Object.assign(size, { minHeight: 36, padding: { top: 4, bottom: 4, start: 10, end: 10 } });
   if (b.height != null) size.minHeight = b.height;
-  if (ui.style(btnClass(b), size).id(b.id).button(b.text)) pressed.push(b.act);
+  if (ui.style(__l10nStyle(btnClass(b)), __l10nStyle(size)).id(b.id).button(b.text)) pressed.push(b.act);
 }
 function btnW(b: Btn, L: Layout): number {
   const w = textW(b.text, btnClass(b), "button");
@@ -110,7 +126,7 @@ export function drawScreens(): void {
 function topbarButtons(): Btn[] {
   const list: Btn[] = [
     { id: "btn-help", text: T("Help"), act: openHelp },
-    { id: "btn-settings", text: T("Settings"), act: () => { audio.play("uiOpen"); openMenu(); } },
+    { id: "btn-settings", text: T("Settings"), act: () => { audio.play("uiOpen"); __l10nOptions(); } },
   ];
   if (!platform.signedIn()) list.push({ id: "btn-signin", text: S("signIn"), act: signIn });
   else if (platform.inviteLink()) list.push({ id: "btn-invite", text: S("invite"), act: copyInvite });
@@ -156,14 +172,14 @@ function chipWidth(): number {
 function chip(): void {
   if (!platform.signedIn()) return;
   const state = platform.syncState();
-  ui.style("player-chip").row("player-chip", () => {
+  ui.style(__l10nStyle("player-chip")).row("player-chip", () => {
     const av = platform.avatarBitmap();
     if (av) ui.widget("", { role: "none", size: { width: 24, height: 24 }, draw: (r) => { draw.image(av, r.x, r.y, r.width, r.height); } });
-    ui.style("player-name").id("player-name").label(platform.displayName());
+    ui.style(__l10nStyle("player-name")).id("player-name").label(platform.displayName());
     ui.widget("", { role: "none", size: { width: 8, height: 8 }, draw: (r) => {
       draw.circle(r.x + r.width / 2, r.y + r.height / 2, r.width / 2, state === "synced" ? "#4caf7d" : state === "saving" ? "#e3b341" : "#b3243a");
     } });
-    ui.style("sync-status").id("sync-status").label(syncText());
+    ui.style(__l10nStyle("sync-status")).id("sync-status").label(syncText());
   }, { spacing: 6, align: "center" });
 }
 
@@ -186,8 +202,8 @@ function topbar(L: Layout): void {
   const pad = L.mode === "land" ? { top: 4, bottom: 4, start: padX, end: padX } : L.narrow ? { top: 6, bottom: 8, start: padX, end: padX } : { top: 8, bottom: 10, start: padX, end: padX };
   const left = (): void => {
     ui.row("brand", () => {
-      ui.style(titleCls, titleStyle).id("game-title").label(title);
-      ui.style("round-info").id("round-label").label(round);
+      ui.style(__l10nStyle(titleCls), __l10nStyle(titleStyle)).id("game-title").label(title);
+      ui.style(__l10nStyle("round-info")).id("round-label").label(round);
       chip();
     }, { spacing: 16, align: "center" });
   };
@@ -205,7 +221,7 @@ function topbar(L: Layout): void {
     }, { spacing: 8, align: "end" });
   };
   const cls = look?.detailed && !ui.preferences().highContrast ? "topbar-detailed" : "topbar";
-  track("topbar", ui.style(cls, { padding: pad }).column("topbar", () => {
+  track("topbar", ui.style(__l10nStyle(cls), __l10nStyle({ padding: pad })).column("topbar", () => {
     if (oneRow) {
       ui.row("topbar-row", () => { left(); ui.spacer(); right(false); }, { width: inner, align: "center" });
     } else {
@@ -288,10 +304,10 @@ function scorePanel(L: Layout, width: number, height: number | null): void {
       const vw = ui.measureText(String(vals[i]), { style: [valCls, vStyle] }).width / L.k;
       para(labels[i]!, Math.max(40, w - vw - 6), labelCls, `score-label-${i}`);
       ui.spacer();
-      ui.style(valCls, vStyle).id(`score-${i}`).label(String(vals[i]));
+      ui.style(__l10nStyle(valCls), __l10nStyle(vStyle)).id(`score-${i}`).label(String(vals[i]));
     }, { width: w, align: "center", ...(L.mode === "wide" ? { padding: { top: 6, bottom: 6 } } : {}) });
   };
-  const r = ui.style(panelClass(), { padding: pad, ...(height != null ? { height } : {}), width }).column(T("Score summary"), () => {
+  const r = ui.style(__l10nStyle(panelClass()), __l10nStyle({ padding: pad, ...(height != null ? { height } : {}), width })).column(T("Score summary"), () => {
     if (L.mode === "wide") { scoreRow(0, inner); scoreRow(1, inner); return; }
     const gap = small ? 12 : 18;
     // compact: side by side; phones and landscape share the line equally
@@ -316,7 +332,7 @@ function sidePanel(L: Layout, width: number, height: number | null): void {
   const build = (w: number): void => {
     track("side-inner", ui.column("side-inner", () => sideContent(L, w), { width: w, spacing: 0 }));
   };
-  const r = ui.style(panelClass(), { padding: pad, width, ...(height != null ? { height } : {}) }).column("side-panel", () => {
+  const r = ui.style(__l10nStyle(panelClass()), __l10nStyle({ padding: pad, width, ...(height != null ? { height } : {}) })).column("side-panel", () => {
     const avail = height != null ? height - (typeof pad === "number" ? pad * 2 : pad.top + pad.bottom) - 2 : 0;
     if (height != null && H("side-inner", 0) > avail + 1) ui.scrollArea("side-scroll", { width: inner, height: avail }, () => build(inner - 10));
     else build(inner);
@@ -335,13 +351,13 @@ function sideContent(L: Layout, w: number): void {
     const items = Rules.SEATS.map((_s, seat) => T("{seat}: {n}", { seat: game.seatLabel(seat), n: rs.tricksWon[seat]! }));
     const rows = wrapRows(items, (t) => textW(t, "trick-item"), w, 12);
     ui.column(T("Tricks taken this round"), () => {
-      rows.forEach((row, ri) => ui.row(`trick-row-${ri}`, () => { row.forEach((t, i) => ui.style("trick-item").id(`trick-${ri}-${i}`).label(t)); }, { spacing: 12 }));
+      rows.forEach((row, ri) => ui.row(`trick-row-${ri}`, () => { row.forEach((t, i) => ui.style(__l10nStyle("trick-item")).id(`trick-${ri}-${i}`).label(t)); }, { spacing: 12 }));
     }, { spacing: 4 });
     gapH(land ? 6 : 12);
   }
   if (m && m.over && game.state.result) {
     const res = game.state.result;
-    ui.style("results-box").column("results-panel", () => {
+    ui.style(__l10nStyle("results-box")).column("results-panel", () => {
       const iw = w - 22;
       para(T("Results"), iw, "panel-title", "results-title");
       gapH(4);
@@ -426,11 +442,11 @@ function helpDialog(L: Layout): void {
   if (!view.help) return;
   const w = Math.min(520, L.W - 32);
   const stillOpen = ui.dialog("How to play", "", true, () => {
-    ui.style("dialog-panel").column("help-panel", () => {
-      ui.style("dialog-head").row("help-head", () => {
-        ui.style("dialog-title").id("help-title").label(T("How to play"));
+    ui.style(__l10nStyle("dialog-panel")).column("help-panel", () => {
+      ui.style(__l10nStyle("dialog-head")).row("help-head", () => {
+        ui.style(__l10nStyle("dialog-title")).id("help-title").label(T("How to play"));
         ui.spacer();
-        if (ui.style("btn").id("help-close").button(T("Close"))) pressed.push(closeHelp);
+        if (ui.style(__l10nStyle("btn")).id("help-close").button(T("Close"))) pressed.push(closeHelp);
       }, { width: w - 2, align: "center" });
       const lines = [
         `${T("Goal:")} ${T("across five rounds, your team (South and North) bids how many tricks it will take, then tries to make that contract.")}`,
@@ -447,7 +463,7 @@ function helpDialog(L: Layout): void {
       const bodyW = w - 30;
       const body = (): void => {
         track("help-body", ui.column("help-body", () => {
-          lines.forEach((t, i) => { if (i) gapH(i === 1 ? 10 : 6); ui.style("dialog-text").id(`help-${i}`).paragraph(t, bodyW); });
+          lines.forEach((t, i) => { if (i) gapH(i === 1 ? 10 : 6); ui.style(__l10nStyle("dialog-text")).id(`help-${i}`).paragraph(t, bodyW); });
         }, { width: w - 2, spacing: 0, padding: { top: 12, bottom: 12, start: 14, end: 14 } }));
       };
       const maxBody = L.H - 48 - H("help-head", 66);
