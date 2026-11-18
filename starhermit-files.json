@@ -1,5 +1,6 @@
 {
   "files": {
+    "README.md": {"sha256": "419972901a0fd733482a1396119c96812fc09e3e0c6d646d501a2b3289ad9e04", "size": 293},
     "assets/localization/CJK-OFL.txt": {"sha256": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2", "size": 4301},
     "assets/localization/Hebrew-OFL.txt": {"sha256": "9b9fe028b5ba74d231659a1bbaf0ed09b11e759d1ca6a070999e16d151616b47", "size": 4382},
     "assets/localization/Hebrew.ttf": {"sha256": "32845e62057329a1902622e82b69070c0178b3e5a0a5ca159a7fcbef99cba999", "size": 18860},
@@ -17,7 +18,8 @@
     "assets/ui-style.json": {"sha256": "e02f36346a697f399f5c4890dfaf79710dd97920f9ab523e5ca04a0882dd8fd7", "size": 7794},
     "cover.jpg": {"sha256": "aeb0976fb4215bc7b8253939dad20ccbcbb88f6beff79a207a7722fc02485851", "size": 252214},
     "icon.png": {"sha256": "e1ab742a3b0153a364b912838d1cb08edf1a91fb6a2f75eddc0b6dea2c43c5c0", "size": 9636},
-    "index.html": {"sha256": "602a9ce2edaacbea1f25fb43e6a13131ccde0eb16a08f5f118c8b5a7b12df21d", "size": 1942},
+    "icon.png.ktx2": {"sha256": "736505f44cf692dd0259c20e8789605de19b3a0c1eb0a7b6683defcf674c6683", "size": 87776},
+    "index.html": {"sha256": "cdc51ffdf2cacb44b31d9fb407af7d2dcf81e81d6882dac56c0fc7a5b27e6ce9", "size": 1784},
     "native/audio.ts": {"sha256": "0c40258a9baf21aea534c6f029792a381a5656b10d16941c53e5392c23f21ac6", "size": 1870},
     "native/classic.ts": {"sha256": "51b9ed1f34b88eaa592a3920ad82a35c8559eff2bf5fffb6c8686e09ba2dfcf6", "size": 2285},
     "native/fx.ts": {"sha256": "89bfc432e4d899e53536a0547905f3ea1b36228b93392ad16f0a2571f4133706", "size": 9956},
@@ -31,7 +33,7 @@
     "native/screens.ts": {"sha256": "55bb36c622b6d21840af5c9f6c9e2b5a253b15307a4466d60ba0adf87cdc9e39", "size": 23511},
     "native/style.ts": {"sha256": "736de64d29b21d0ed3fab6888294b405bb02c71045d2efd6ab024d6459ff260b", "size": 1818},
     "native/table.ts": {"sha256": "f9484dfc5218854fc0a9411a6ce8445ad04ae440d9645b125718fb5f1f8104f3", "size": 14249},
-    "publication.json": {"sha256": "3534ca55b0e10424c75b1f7578015406db9cb7545b99a53f81a5dc6caf79e991", "size": 3400},
+    "publication.json": {"sha256": "abb05fe0bd19774f3692fb10e65dfd3c16db35fb1c9fff3788e1d60f4b509f83", "size": 3401},
     "rules.js": {"sha256": "d174847db9276114b31f97e319bba37733293f77ee9a83600569be8fae1e2ade", "size": 8803},
     "score-script.js": {"sha256": "ec089b11eacd9294818104695ad9d364a3c229d75e040b322148f89893e58be8", "size": 2490},
     "sfx/bid-pass.opus": {"sha256": "6d65d1ec41b53ed48cb08ba9363c7aaeb5ccefb6dc1622e3ea03baf94dc813c3", "size": 11757},
@@ -51,7 +53,7 @@
     "sfx/trick-win.opus": {"sha256": "f61184afda7710b7b97669993c92a1fe502e407c67720b633e42457a3bde2421", "size": 24895},
     "sfx/ui-click.opus": {"sha256": "91ce91252861e2eec5f6f15288d61c637e49d735f496c39602f506b19c0b34a5", "size": 11610},
     "sfx/ui-open.opus": {"sha256": "d12dc7e62335d84b650e449fdec5bc72877dcbdec04ee0d89ee0536068ad5b9c", "size": 11630},
-    "starhermit.txt": {"sha256": "c9a93e7737f129136325abb4768c2cfc9011144b2337fd05213b8a3c00798093", "size": 1319},
+    "starhermit.txt": {"sha256": "f9c654c9ce912056800212cd7ee56e771631958159a7fab30f006583b6f96666", "size": 1371},
     "store.js": {"sha256": "5c4bd5e1d7200ebbf5cf880646ee7a53e18743a9dc9bdf679088bbdb587c93ad", "size": 5533}
   },
   "excluded": ["LICENSE.md", "coverart.png", "node_modules/", "package-lock.json", "package.json", "server.js", "sfx/manifest.md", "spec.md", "tests/", "tools/", "tsconfig.json"],
