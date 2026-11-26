@@ -12,7 +12,7 @@
     "metadataSource": "starhermit.txt",
     "createdAt": "2026-09-01T09:41:52.39655+00:00",
     "coverArtSource": "manifest",
-    "coverArtUpdatedAt": "2026-11-26T16:09:33.952339+00:00",
+    "coverArtUpdatedAt": "2026-11-26T22:20:45.485628+00:00",
     "submittedByUserId": "2712e04e-461b-4d23-81ae-e40b429128a8",
     "submittedByUsername": "starhermit",
     "hosting": {
@@ -22,9 +22,9 @@
       "pinnedCommitSha": null,
       "deployedCommitSha": null,
       "deployError": null,
-      "deployedAt": "2026-11-26T16:09:33.937856+00:00",
+      "deployedAt": "2026-11-26T22:20:45.475906+00:00",
       "externalLaunchUrl": null,
-      "engineVersion": "1.50.0",
+      "engineVersion": "1.51.0",
       "deployWarning": null
     },
     "description": "Bid for tricks, follow suit, and use spades as trump to help your partnership meet its contract.",
@@ -36,10 +36,10 @@
     "links": [],
     "isDisabled": false
   },
-  "publishedAt": "2026-11-26T16:09:33.080Z",
-  "sourceCommit": "f5e228db1f1970e0432b618116b3ab464f965c2e",
+  "publishedAt": "2026-11-26T22:20:45.865Z",
+  "sourceCommit": "0da1811c63b61b3767377985367893f9bcf90288",
   "bytesReceived": 1176210,
-  "archiveSha256": "22704ca32153ff75a795cc079c6a83dcf3a651f6fa9b3c25c340355193a0dfdb",
+  "archiveSha256": "41653b430a756f2adcc9ac69c3b76e2e7a71afcc59a0fbe04a79aecf909449cc",
   "indexSha256": "4f9d5a06e3e6ce26b935ff1f3aac25602c8bc623269a28b83a38c43151985b90",
   "result": {
     "clientPublished": true,
@@ -48,7 +48,7 @@
     "bytesReceived": 1176210,
     "mode": "replace",
     "filesRemoved": 0,
-    "engineVersion": "1.50.0",
+    "engineVersion": "1.51.0",
     "deployWarning": null
   },
   "liveVerification": {
