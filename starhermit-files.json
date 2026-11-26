@@ -36,7 +36,7 @@
     "native/screens.ts": {"sha256": "55bb36c622b6d21840af5c9f6c9e2b5a253b15307a4466d60ba0adf87cdc9e39", "size": 23511},
     "native/style.ts": {"sha256": "736de64d29b21d0ed3fab6888294b405bb02c71045d2efd6ab024d6459ff260b", "size": 1818},
     "native/table.ts": {"sha256": "f9484dfc5218854fc0a9411a6ce8445ad04ae440d9645b125718fb5f1f8104f3", "size": 14249},
-    "publication.json": {"sha256": "b14016fa12b652f912841be9698570dcda60358e7ef5aefd1fbe4e5c121f5d76", "size": 4309},
+    "publication.json": {"sha256": "62ea6284b0d4ada9bb79a64706f57b3c025dcead99cb40a6a697f7159d0386f9", "size": 4309},
     "rules.js": {"sha256": "d174847db9276114b31f97e319bba37733293f77ee9a83600569be8fae1e2ade", "size": 8803},
     "score-script.js": {"sha256": "ec089b11eacd9294818104695ad9d364a3c229d75e040b322148f89893e58be8", "size": 2490},
     "sfx/bid-pass.opus": {"sha256": "6d65d1ec41b53ed48cb08ba9363c7aaeb5ccefb6dc1622e3ea03baf94dc813c3", "size": 11757},
