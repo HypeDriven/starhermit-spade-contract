@@ -1,8 +1,8 @@
 # Spade Contract — specification
 
 Spade Contract is a Spades-style team trick-taking card game for one player and three AI seats, set in an
-observatory card room. It is a StarHermit engine script game (TypeScript on the host API, engine 1.51.0,
-`engine.minor=51`): one package played natively by the StarHermit client and in browsers by the engine's
+observatory card room. It is a StarHermit engine script game (TypeScript on the host API, engine 1.53.0,
+`engine.minor=53`): one package played natively by the StarHermit client and in browsers by the engine's
 web runtime (the loader `index.html` that `npm run package` writes).
 
 ## Rules (rules.js)
@@ -140,8 +140,10 @@ The string tables include complete regional variants for `fr-BE`, `de-BE`, `en-S
 
 <!-- regional-localization:end -->
 
-## Engine 1.51.0
+## Engine 1.53.0
 
-Browser play uses the StarHermit 1.51.0 web runtime on WebGPU, or WebGL 2 where WebGPU is missing. Automatic ray-traced shadows are enabled on supported Vulkan devices, with mapped-shadow fallbacks elsewhere. Packaging creates block-compressed runtime textures and compressed glTF copies, retaining original image fallbacks.
+Browser play uses the StarHermit 1.53.0 web runtime on WebGPU, or WebGL 2 where WebGPU is missing. Automatic ray-traced shadows are enabled on supported Vulkan devices, with mapped-shadow fallbacks elsewhere. Packaging creates block-compressed runtime textures and compressed glTF copies, retaining original image fallbacks.
 
 Browser rendering uses the engine's asynchronous pipeline creation so newly encountered materials do not stall the page. Native play retains the engine's synchronous pipeline behavior.
+
+On engine 1.53.0, browser play through WebGL 2 compiles a frame's shader programs together and holds that frame until they are linked, blends skinned meshes in one pass, reuses the window pass's depth, and uses a hardware WebGL 2 context when WebGPU's adapter is software.
